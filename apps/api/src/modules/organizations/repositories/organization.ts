@@ -112,6 +112,7 @@ export class OrganizationRepository {
       userId: string;
       organizationId: string;
       role: MembershipRole;
+      createdBy?: string;
     },
     tx?: Prisma.TransactionClient,
   ) {
@@ -121,6 +122,7 @@ export class OrganizationRepository {
         userId: data.userId,
         organizationId: data.organizationId,
         role: data.role,
+        ...(data.createdBy !== undefined ? { createdBy: data.createdBy } : {}),
       },
     });
   }
@@ -171,6 +173,104 @@ export class OrganizationRepository {
         isActive: false,
         deletedAt: new Date(),
       },
+    });
+  }
+
+  /**
+   * Lists all organization member records (including User properties).
+   */
+  public static async listMembers(
+    organizationId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    return client.organizationMember.findMany({
+      where: { organizationId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Finds a membership by ID (including User properties).
+   */
+  public static async findMemberById(
+    organizationId: string,
+    memberId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    return client.organizationMember.findFirst({
+      where: {
+        id: memberId,
+        organizationId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Finds a membership by organization ID and user ID.
+   */
+  public static async findMembershipByUserId(
+    organizationId: string,
+    userId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    return client.organizationMember.findUnique({
+      where: {
+        userId_organizationId: {
+          userId,
+          organizationId,
+        },
+      },
+    });
+  }
+
+  /**
+   * Updates a membership's role.
+   */
+  public static async updateMembership(
+    memberId: string,
+    role: MembershipRole,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    return client.organizationMember.update({
+      where: { id: memberId },
+      data: { role },
+    });
+  }
+
+  /**
+   * Deletes a membership record.
+   */
+  public static async deleteMembership(
+    memberId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    return client.organizationMember.delete({
+      where: { id: memberId },
     });
   }
 }

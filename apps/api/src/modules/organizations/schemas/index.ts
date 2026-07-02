@@ -56,3 +56,58 @@ export const deleteOrganizationSchema = {
     organizationId: z.string().uuid('Invalid organization ID format.'),
   }),
 };
+
+export const addMemberSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+  body: z.object({
+    email: z
+      .string()
+      .email('Must be a valid email address.')
+      .transform((val) => val.toLowerCase().trim()),
+    role: z.enum([
+      'ORG_OWNER',
+      'ORG_ADMIN',
+      'PROJECT_MAINTAINER',
+      'DEVELOPER',
+      'READ_ONLY',
+    ]),
+  }),
+};
+
+export const updateMemberRoleSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+    memberId: z.string().uuid('Invalid member ID format.'),
+  }),
+  body: z.object({
+    role: z.enum([
+      'ORG_OWNER',
+      'ORG_ADMIN',
+      'PROJECT_MAINTAINER',
+      'DEVELOPER',
+      'READ_ONLY',
+    ]),
+  }),
+};
+
+export const removeMemberSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+    memberId: z.string().uuid('Invalid member ID format.'),
+  }),
+};
+
+export const listMembersSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+};
+
+export const getMemberSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+    memberId: z.string().uuid('Invalid member ID format.'),
+  }),
+};
