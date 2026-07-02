@@ -3,6 +3,7 @@ import { healthRouter } from '../health/index.js';
 import { authRouter } from '../modules/auth/index.js';
 import { organizationRouter } from '../modules/organizations/index.js';
 import { invitationsRouter } from '../modules/invitations/index.js';
+import { projectsRouter } from '../modules/projects/index.js';
 
 const router = Router();
 
@@ -11,5 +12,6 @@ router.use('/', healthRouter);
 router.use('/auth', authRouter);
 router.use('/organizations', organizationRouter);
 router.use('/invitations', invitationsRouter);
+router.use('/projects', projectsRouter);
 
 export const apiRouter = router;

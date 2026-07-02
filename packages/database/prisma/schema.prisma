@@ -140,6 +140,11 @@ model Project {
   organizationId String       @map("organization_id") @db.Uuid
   name           String
   slug           String
+  description    String?
+  metadata       Json         @default("{}")
+  settings       Json         @default("{}")
+  isActive       Boolean      @default(true) @map("is_active")
+  isArchived     Boolean      @default(false) @map("is_archived")
   createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz
@@ -147,6 +152,7 @@ model Project {
   queues         Queue[]
 
   @@unique([organizationId, slug], map: "unique_project_slug_per_org")
+  @@unique([organizationId, name], map: "unique_project_name_per_org")
   @@map("projects")
 }
 

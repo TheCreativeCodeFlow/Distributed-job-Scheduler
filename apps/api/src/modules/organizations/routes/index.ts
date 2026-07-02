@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { OrganizationController } from '../controllers/organization.js';
 import { MembershipController } from '../controllers/membership.js';
 import { orgInvitationsRouter } from '../../invitations/index.js';
+import { orgProjectsRouter } from '../../projects/index.js';
 import { AdministrationController } from '../controllers/administration.js';
 import {
   createOrganizationSchema,
@@ -122,6 +123,8 @@ router.post(
   validate(reactivateOrgSchema),
   AdministrationController.reactivate,
 );
+
+router.use('/:organizationId/projects', orgProjectsRouter);
 
 export const organizationRouter = router;
 export default organizationRouter;
