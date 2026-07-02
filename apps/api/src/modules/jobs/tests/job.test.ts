@@ -243,4 +243,135 @@ describe('Job Submission Engine', () => {
       expect(res.body.status).toBe('QUEUED');
     });
   });
+
+  describe('Delayed & Scheduled Job Operations', () => {
+    const mockScheduledJobId = '88888888-8888-8888-8888-888888888888';
+    const futureDate = new Date(Date.now() + 1000 * 60 * 60).toISOString();
+
+    const mockQueue = {
+      id: mockQueueId,
+      projectId: mockProjectId,
+      status: QueueStatus.ACTIVE,
+      isActive: true,
+      isArchived: false,
+    } as Queue;
+
+    const mockProject = {
+      id: mockProjectId,
+      organizationId: mockOrgId,
+    } as Project;
+
+    beforeEach(() => {
+      vi.spyOn(QueueRepository, 'findById').mockResolvedValue(mockQueue);
+      vi.spyOn(ProjectRepository, 'findById').mockResolvedValue(mockProject);
+      vi.spyOn(OrganizationRepository, 'getMembership').mockResolvedValue({
+        role: MembershipRole.DEVELOPER,
+      } as any);
+    });
+
+    it('should successfully schedule a job with executeAt in the future', async () => {
+      const mockScheduled = {
+        id: mockScheduledJobId,
+        jobId: mockJobId,
+        queueId: mockQueueId,
+        nextRunAt: new Date(futureDate),
+        job: { id: mockJobId, status: JobStatus.SCHEDULED },
+      } as any;
+
+      vi.spyOn(JobRepository, 'createScheduledJob').mockResolvedValue(
+        mockScheduled,
+      );
+
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/jobs/schedule`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          payload: { run: true },
+          executeAt: futureDate,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.id).toBe(mockScheduledJobId);
+      expect(res.body.job.status).toBe('SCHEDULED');
+    });
+
+    it('should successfully schedule a job with a positive delay', async () => {
+      const mockScheduled = {
+        id: mockScheduledJobId,
+        jobId: mockJobId,
+        queueId: mockQueueId,
+        nextRunAt: new Date(),
+        job: { id: mockJobId, status: JobStatus.SCHEDULED },
+      } as any;
+
+      vi.spyOn(JobRepository, 'createScheduledJob').mockResolvedValue(
+        mockScheduled,
+      );
+
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/jobs/schedule`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          payload: { run: true },
+          delay: 5000,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.job.status).toBe('SCHEDULED');
+    });
+
+    it('should reject scheduling requests specifying both executeAt and delay', async () => {
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/jobs/schedule`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          payload: { run: true },
+          executeAt: futureDate,
+          delay: 5000,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.invalidParams[0].reason).toContain(
+        'specify either executeAt or delay',
+      );
+    });
+
+    it('should reject past executeAt execution time', async () => {
+      const pastDate = new Date(Date.now() - 1000 * 60).toISOString();
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/jobs/schedule`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          payload: { run: true },
+          executeAt: pastDate,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.detail).toContain('must be in the future');
+    });
+
+    it('should successfully cancel a SCHEDULED job', async () => {
+      const mockScheduled = {
+        id: mockScheduledJobId,
+        jobId: mockJobId,
+        queueId: mockQueueId,
+        job: { id: mockJobId, status: JobStatus.SCHEDULED },
+      } as any;
+
+      vi.spyOn(JobRepository, 'findScheduledJobById').mockResolvedValue(
+        mockScheduled,
+      );
+      vi.spyOn(JobRepository, 'updateStatus').mockResolvedValue({
+        id: mockJobId,
+        status: JobStatus.CANCELLED,
+      } as Job);
+
+      const res = await request(app)
+        .post(`/api/v1/scheduled-jobs/${mockScheduledJobId}/cancel`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.job.status).toBe('CANCELLED');
+    });
+  });
 });

@@ -90,4 +90,72 @@ export class JobRepository {
       data: { status },
     });
   }
+
+  /**
+   * Finds a scheduled job by ID.
+   */
+  public static async findScheduledJobById(
+    id: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    return client.scheduledJob.findUnique({
+      where: { id },
+      include: { job: true },
+    });
+  }
+
+  /**
+   * Lists scheduled jobs in a queue.
+   */
+  public static async listScheduledJobsForQueue(
+    queueId: string,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    return client.scheduledJob.findMany({
+      where: { queueId },
+      include: { job: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Creates a scheduled job.
+   */
+  public static async createScheduledJob(
+    data: {
+      queueId: string;
+      payload: Record<string, unknown>;
+      priority?: number;
+      metadata?: Record<string, unknown>;
+      idempotencyKey?: string | null;
+      submittedBy?: string | null;
+      executeAt: Date;
+    },
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx || db;
+    const job = await client.job.create({
+      data: {
+        queueId: data.queueId,
+        payload: data.payload as Prisma.InputJsonValue,
+        priority: data.priority ?? 1,
+        metadata: (data.metadata || {}) as Prisma.InputJsonValue,
+        idempotencyKey: data.idempotencyKey ?? null,
+        submittedBy: data.submittedBy ?? null,
+        status: JobStatus.SCHEDULED,
+        scheduledAt: data.executeAt,
+      },
+    });
+
+    return client.scheduledJob.create({
+      data: {
+        jobId: job.id,
+        queueId: data.queueId,
+        nextRunAt: data.executeAt,
+      },
+      include: { job: true },
+    });
+  }
 }

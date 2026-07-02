@@ -61,4 +61,53 @@ export class JobQueryService {
 
     return job;
   }
+
+  /**
+   * Lists scheduled jobs in a queue.
+   */
+  public static async listScheduledForQueue(userId: string, queueId: string) {
+    const queue = await QueueRepository.findById(queueId);
+    if (!queue) {
+      throw new NotFoundError('Queue not found.');
+    }
+
+    const project = await ProjectRepository.findById(queue.projectId);
+    if (!project) {
+      throw new NotFoundError('Project not found.');
+    }
+
+    await OrganizationAuthorizationService.assertMembership(
+      userId,
+      project.organizationId,
+    );
+
+    return JobRepository.listScheduledJobsForQueue(queueId);
+  }
+
+  /**
+   * Retrieves single scheduled job details.
+   */
+  public static async getScheduledJob(userId: string, scheduledJobId: string) {
+    const scheduled = await JobRepository.findScheduledJobById(scheduledJobId);
+    if (!scheduled) {
+      throw new NotFoundError('Scheduled job not found.');
+    }
+
+    const queue = await QueueRepository.findById(scheduled.queueId);
+    if (!queue) {
+      throw new NotFoundError('Queue not found.');
+    }
+
+    const project = await ProjectRepository.findById(queue.projectId);
+    if (!project) {
+      throw new NotFoundError('Project not found.');
+    }
+
+    await OrganizationAuthorizationService.assertMembership(
+      userId,
+      project.organizationId,
+    );
+
+    return scheduled;
+  }
 }

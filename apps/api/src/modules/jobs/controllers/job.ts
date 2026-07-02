@@ -108,4 +108,93 @@ export class JobController {
       next(error);
     }
   }
+
+  /**
+   * POST /queues/:queueId/jobs/schedule
+   */
+  public static async schedule(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await JobService.schedule(
+        req.user.id,
+        req.params.queueId!,
+        req.body,
+      );
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /queues/:queueId/jobs/scheduled
+   */
+  public static async listScheduled(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await JobQueryService.listScheduledForQueue(
+        req.user.id,
+        req.params.queueId!,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /scheduled-jobs/:scheduledJobId
+   */
+  public static async getScheduled(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await JobQueryService.getScheduledJob(
+        req.user.id,
+        req.params.scheduledJobId!,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /scheduled-jobs/:scheduledJobId/cancel
+   */
+  public static async cancelScheduled(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await JobService.cancelScheduled(
+        req.user.id,
+        req.params.scheduledJobId!,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

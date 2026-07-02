@@ -430,6 +430,89 @@ const swaggerDocument = {
         },
       },
     },
+    '/queues/{queueId}/jobs/schedule': {
+      post: {
+        summary: 'Schedule Job',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['payload'],
+                properties: {
+                  payload: { type: 'object' },
+                  priority: { type: 'integer', default: 1 },
+                  metadata: { type: 'object' },
+                  idempotencyKey: { type: 'string' },
+                  executeAt: { type: 'string', format: 'date-time' },
+                  delay: { type: 'integer' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Scheduled job created successfully.' },
+        },
+      },
+    },
+    '/queues/{queueId}/jobs/scheduled': {
+      get: {
+        summary: 'List Scheduled Jobs',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'List of scheduled jobs.' },
+        },
+      },
+    },
+    '/scheduled-jobs/{scheduledJobId}': {
+      get: {
+        summary: 'Get Scheduled Job',
+        parameters: [
+          {
+            name: 'scheduledJobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Scheduled job details.' },
+        },
+      },
+    },
+    '/scheduled-jobs/{scheduledJobId}/cancel': {
+      post: {
+        summary: 'Cancel Scheduled Job',
+        parameters: [
+          {
+            name: 'scheduledJobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Scheduled job cancelled.' },
+        },
+      },
+    },
   },
 };
 
