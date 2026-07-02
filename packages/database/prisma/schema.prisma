@@ -97,6 +97,7 @@ model Organization {
   logoUrl     String?              @map("logo_url")
   metadata    Json                 @default("{}")
   isActive    Boolean              @default(true) @map("is_active")
+  isSuspended Boolean              @default(false) @map("is_suspended")
   createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime             @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt   DateTime?            @map("deleted_at") @db.Timestamptz

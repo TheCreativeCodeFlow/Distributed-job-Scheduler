@@ -111,3 +111,45 @@ export const getMemberSchema = {
     memberId: z.string().uuid('Invalid member ID format.'),
   }),
 };
+
+export const transferOwnershipSchema = {
+  body: z.object({
+    targetUserId: z.string().uuid('Invalid target user ID format.'),
+  }),
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+};
+
+export const updateSettingsSchema = {
+  body: z.object({
+    metadata: z.record(z.unknown()),
+  }),
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+};
+
+export const getOrgActivitySchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+};
+
+export const getOrgStatsSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+};
+
+export const suspendOrgSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+};
+
+export const reactivateOrgSchema = {
+  params: z.object({
+    organizationId: z.string().uuid('Invalid organization ID format.'),
+  }),
+};

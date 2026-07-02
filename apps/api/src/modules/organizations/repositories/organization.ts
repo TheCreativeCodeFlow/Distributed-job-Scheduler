@@ -138,6 +138,7 @@ export class OrganizationRepository {
       logoUrl?: string;
       metadata?: Record<string, unknown>;
       isActive?: boolean;
+      isSuspended?: boolean;
     },
     tx?: Prisma.TransactionClient,
   ): Promise<Organization> {
@@ -152,6 +153,8 @@ export class OrganizationRepository {
       updateData.metadata = data.metadata as Prisma.InputJsonValue;
     }
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.isSuspended !== undefined)
+      updateData.isSuspended = data.isSuspended;
 
     return client.organization.update({
       where: { id },

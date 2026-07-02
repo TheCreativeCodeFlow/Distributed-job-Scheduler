@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { OrganizationController } from '../controllers/organization.js';
 import { MembershipController } from '../controllers/membership.js';
 import { orgInvitationsRouter } from '../../invitations/index.js';
+import { AdministrationController } from '../controllers/administration.js';
 import {
   createOrganizationSchema,
   updateOrganizationSchema,
@@ -12,6 +13,12 @@ import {
   removeMemberSchema,
   listMembersSchema,
   getMemberSchema,
+  transferOwnershipSchema,
+  updateSettingsSchema,
+  getOrgActivitySchema,
+  getOrgStatsSchema,
+  suspendOrgSchema,
+  reactivateOrgSchema,
 } from '../schemas/index.js';
 import { validate } from '../../../middlewares/validator.js';
 import { requireAuth } from '../../auth/middleware/auth.js';
@@ -77,6 +84,44 @@ router.delete(
 );
 
 router.use('/:organizationId/invitations', orgInvitationsRouter);
+
+// Administrative routes
+router.post(
+  '/:organizationId/transfer-ownership',
+  requireAuth,
+  validate(transferOwnershipSchema),
+  AdministrationController.transferOwnership,
+);
+router.get(
+  '/:organizationId/activity',
+  requireAuth,
+  validate(getOrgActivitySchema),
+  AdministrationController.getActivityLog,
+);
+router.get(
+  '/:organizationId/statistics',
+  requireAuth,
+  validate(getOrgStatsSchema),
+  AdministrationController.getStatistics,
+);
+router.patch(
+  '/:organizationId/settings',
+  requireAuth,
+  validate(updateSettingsSchema),
+  AdministrationController.updateSettings,
+);
+router.post(
+  '/:organizationId/suspend',
+  requireAuth,
+  validate(suspendOrgSchema),
+  AdministrationController.suspend,
+);
+router.post(
+  '/:organizationId/reactivate',
+  requireAuth,
+  validate(reactivateOrgSchema),
+  AdministrationController.reactivate,
+);
 
 export const organizationRouter = router;
 export default organizationRouter;
