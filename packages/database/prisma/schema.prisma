@@ -186,7 +186,7 @@ model Job {
   worker         Worker?           @relation(fields: [workerId], references: [id], onDelete: SetNull)
   executions     JobExecution[]
   deadLetter     DeadLetterEntry?
-  scheduledJob   ScheduledJob?     @relation(fields: [id], references: [jobId], onDelete: Cascade)
+  scheduledJob   ScheduledJob?
   leases         WorkerLease[]
 
   // Partial B-Tree index emulation via filtered composite mapping
