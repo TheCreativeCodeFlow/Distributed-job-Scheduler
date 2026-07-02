@@ -7,6 +7,12 @@ import {
   updateQueueSchema,
   archiveQueueSchema,
   restoreQueueSchema,
+  pauseQueueSchema,
+  resumeQueueSchema,
+  drainQueueSchema,
+  enableQueueSchema,
+  disableQueueSchema,
+  getQueueStatusSchema,
 } from '../schemas/index.js';
 import { validate } from '../../../middlewares/validator.js';
 import { requireAuth } from '../../auth/middleware/auth.js';
@@ -40,6 +46,48 @@ queuesRouter.post(
   requireAuth,
   validate(restoreQueueSchema),
   QueueController.restore,
+);
+
+queuesRouter.post(
+  '/:queueId/pause',
+  requireAuth,
+  validate(pauseQueueSchema),
+  QueueController.pause,
+);
+
+queuesRouter.post(
+  '/:queueId/resume',
+  requireAuth,
+  validate(resumeQueueSchema),
+  QueueController.resume,
+);
+
+queuesRouter.post(
+  '/:queueId/drain',
+  requireAuth,
+  validate(drainQueueSchema),
+  QueueController.drain,
+);
+
+queuesRouter.post(
+  '/:queueId/enable',
+  requireAuth,
+  validate(enableQueueSchema),
+  QueueController.enable,
+);
+
+queuesRouter.post(
+  '/:queueId/disable',
+  requireAuth,
+  validate(disableQueueSchema),
+  QueueController.disable,
+);
+
+queuesRouter.get(
+  '/:queueId/status',
+  requireAuth,
+  validate(getQueueStatusSchema),
+  QueueController.status,
 );
 
 // Project queues sub-router (e.g. /api/v1/projects/:projectId/queues)

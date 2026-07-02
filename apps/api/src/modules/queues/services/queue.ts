@@ -5,6 +5,7 @@ import {
   ConflictError,
   NotFoundError,
   AuthorizationError,
+  ValidationError,
 } from '../../../errors/index.js';
 import { MembershipRole, Queue, QueueStatus } from '@prisma/client';
 import { logger } from '../../../logger/index.js';
@@ -303,5 +304,154 @@ export class QueueService {
     const deleted = await QueueRepository.softDelete(queueId);
     logger.warn({ queueId, operatorUserId }, 'Queue soft deleted.');
     return deleted;
+  }
+
+  private static readonly VALID_TRANSITIONS: Record<
+    QueueStatus,
+    QueueStatus[]
+  > = {
+    [QueueStatus.ACTIVE]: [
+      QueueStatus.PAUSED,
+      QueueStatus.DRAINING,
+      QueueStatus.DISABLED,
+      QueueStatus.ARCHIVED,
+    ],
+    [QueueStatus.PAUSED]: [
+      QueueStatus.ACTIVE,
+      QueueStatus.DRAINING,
+      QueueStatus.DISABLED,
+      QueueStatus.ARCHIVED,
+    ],
+    [QueueStatus.DRAINING]: [
+      QueueStatus.ACTIVE,
+      QueueStatus.PAUSED,
+      QueueStatus.DISABLED,
+      QueueStatus.ARCHIVED,
+    ],
+    [QueueStatus.DISABLED]: [
+      QueueStatus.ACTIVE, // Can only transition to ACTIVE (enable)
+      QueueStatus.ARCHIVED,
+    ],
+    [QueueStatus.ARCHIVED]: [
+      QueueStatus.ACTIVE, // Can only transition to ACTIVE (restore)
+    ],
+  };
+
+  private static validateTransition(
+    current: QueueStatus,
+    next: QueueStatus,
+  ): void {
+    const allowed = QueueService.VALID_TRANSITIONS[current];
+    if (!allowed || !allowed.includes(next)) {
+      throw new ValidationError(
+        `Invalid queue state transition from ${current} to ${next}.`,
+      );
+    }
+  }
+
+  private static async updateStatus(
+    operatorUserId: string,
+    queueId: string,
+    targetStatus: QueueStatus,
+  ): Promise<Queue> {
+    const queue = await QueueRepository.findById(queueId);
+    if (!queue) {
+      throw new NotFoundError('Queue not found.');
+    }
+
+    const project = await ProjectRepository.findById(queue.projectId);
+    if (!project) {
+      throw new NotFoundError('Project not found.');
+    }
+
+    const operatorRole =
+      await OrganizationAuthorizationService.assertMembership(
+        operatorUserId,
+        project.organizationId,
+      );
+
+    if (
+      operatorRole !== MembershipRole.ORG_OWNER &&
+      operatorRole !== MembershipRole.ORG_ADMIN &&
+      operatorRole !== MembershipRole.PROJECT_MAINTAINER
+    ) {
+      throw new AuthorizationError(
+        `Access denied. Insufficient privileges to update queue state to ${targetStatus}.`,
+      );
+    }
+
+    // Perform state transition validation
+    QueueService.validateTransition(queue.status, targetStatus);
+
+    const updated = await QueueRepository.update(queueId, {
+      status: targetStatus,
+    });
+
+    return updated;
+  }
+
+  public static async pause(
+    operatorUserId: string,
+    queueId: string,
+  ): Promise<Queue> {
+    const updated = await QueueService.updateStatus(
+      operatorUserId,
+      queueId,
+      QueueStatus.PAUSED,
+    );
+    logger.info({ queueId, operatorUserId }, 'Queue paused.');
+    return updated;
+  }
+
+  public static async resume(
+    operatorUserId: string,
+    queueId: string,
+  ): Promise<Queue> {
+    const updated = await QueueService.updateStatus(
+      operatorUserId,
+      queueId,
+      QueueStatus.ACTIVE,
+    );
+    logger.info({ queueId, operatorUserId }, 'Queue resumed.');
+    return updated;
+  }
+
+  public static async drain(
+    operatorUserId: string,
+    queueId: string,
+  ): Promise<Queue> {
+    const updated = await QueueService.updateStatus(
+      operatorUserId,
+      queueId,
+      QueueStatus.DRAINING,
+    );
+    logger.info({ queueId, operatorUserId }, 'Queue drained.');
+    return updated;
+  }
+
+  public static async disable(
+    operatorUserId: string,
+    queueId: string,
+  ): Promise<Queue> {
+    const updated = await QueueService.updateStatus(
+      operatorUserId,
+      queueId,
+      QueueStatus.DISABLED,
+    );
+    logger.warn({ queueId, operatorUserId }, 'Queue disabled.');
+    return updated;
+  }
+
+  public static async enable(
+    operatorUserId: string,
+    queueId: string,
+  ): Promise<Queue> {
+    const updated = await QueueService.updateStatus(
+      operatorUserId,
+      queueId,
+      QueueStatus.ACTIVE,
+    );
+    logger.info({ queueId, operatorUserId }, 'Queue enabled.');
+    return updated;
   }
 }

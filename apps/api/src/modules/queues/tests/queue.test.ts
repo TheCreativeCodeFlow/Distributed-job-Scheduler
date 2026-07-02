@@ -259,4 +259,110 @@ describe('Queue Management Module', () => {
       expect(res.body.status).toBe('ACTIVE');
     });
   });
+
+  describe('Queue Operational Controls State Transitions', () => {
+    const mockProject = {
+      id: mockProjectId,
+      organizationId: mockOrgId,
+    } as Project;
+
+    beforeEach(() => {
+      vi.spyOn(ProjectRepository, 'findById').mockResolvedValue(mockProject);
+      vi.spyOn(OrganizationRepository, 'getMembership').mockResolvedValue({
+        role: MembershipRole.ORG_ADMIN,
+      } as any);
+    });
+
+    it('should successfully transition ACTIVE -> PAUSED', async () => {
+      const mockQueue = {
+        id: mockQueueId,
+        projectId: mockProjectId,
+        status: QueueStatus.ACTIVE,
+      } as any;
+      vi.spyOn(QueueRepository, 'findById').mockResolvedValue(mockQueue);
+      vi.spyOn(QueueRepository, 'update').mockResolvedValue({
+        ...mockQueue,
+        status: QueueStatus.PAUSED,
+      });
+
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/pause`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('PAUSED');
+    });
+
+    it('should reject invalid transition DISABLED -> PAUSED', async () => {
+      const mockQueue = {
+        id: mockQueueId,
+        projectId: mockProjectId,
+        status: QueueStatus.DISABLED,
+      } as any;
+      vi.spyOn(QueueRepository, 'findById').mockResolvedValue(mockQueue);
+
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/pause`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.detail).toContain('Invalid queue state transition');
+    });
+
+    it('should successfully transition DISABLED -> ACTIVE on enable', async () => {
+      const mockQueue = {
+        id: mockQueueId,
+        projectId: mockProjectId,
+        status: QueueStatus.DISABLED,
+      } as any;
+      vi.spyOn(QueueRepository, 'findById').mockResolvedValue(mockQueue);
+      vi.spyOn(QueueRepository, 'update').mockResolvedValue({
+        ...mockQueue,
+        status: QueueStatus.ACTIVE,
+      });
+
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/enable`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ACTIVE');
+    });
+
+    it('should successfully transition ACTIVE -> DRAINING', async () => {
+      const mockQueue = {
+        id: mockQueueId,
+        projectId: mockProjectId,
+        status: QueueStatus.ACTIVE,
+      } as any;
+      vi.spyOn(QueueRepository, 'findById').mockResolvedValue(mockQueue);
+      vi.spyOn(QueueRepository, 'update').mockResolvedValue({
+        ...mockQueue,
+        status: QueueStatus.DRAINING,
+      });
+
+      const res = await request(app)
+        .post(`/api/v1/queues/${mockQueueId}/drain`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('DRAINING');
+    });
+
+    it('should retrieve status using the status endpoint', async () => {
+      const mockQueue = {
+        id: mockQueueId,
+        projectId: mockProjectId,
+        status: QueueStatus.PAUSED,
+      } as any;
+      vi.spyOn(QueueRepository, 'findById').mockResolvedValue(mockQueue);
+
+      const res = await request(app)
+        .get(`/api/v1/queues/${mockQueueId}/status`)
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('PAUSED');
+    });
+  });
 });

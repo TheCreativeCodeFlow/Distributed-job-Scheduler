@@ -88,3 +88,39 @@ export const restoreQueueSchema = {
     queueId: z.string().uuid('Invalid queue ID format.'),
   }),
 };
+
+export const pauseQueueSchema = {
+  params: z.object({
+    queueId: z.string().uuid('Invalid queue ID format.'),
+  }),
+};
+
+export const resumeQueueSchema = {
+  params: z.object({
+    queueId: z.string().uuid('Invalid queue ID format.'),
+  }),
+};
+
+export const drainQueueSchema = {
+  params: z.object({
+    queueId: z.string().uuid('Invalid queue ID format.'),
+  }),
+};
+
+export const enableQueueSchema = {
+  params: z.object({
+    queueId: z.string().uuid('Invalid queue ID format.'),
+  }),
+};
+
+export const disableQueueSchema = {
+  params: z.object({
+    queueId: z.string().uuid('Invalid queue ID format.'),
+  }),
+};
+
+export const getQueueStatusSchema = {
+  params: z.object({
+    queueId: z.string().uuid('Invalid queue ID format.'),
+  }),
+};

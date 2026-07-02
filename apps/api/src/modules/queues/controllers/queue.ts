@@ -134,4 +134,130 @@ export class QueueController {
       next(error);
     }
   }
+
+  /**
+   * POST /queues/:queueId/pause
+   */
+  public static async pause(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await QueueService.pause(req.user.id, req.params.queueId!);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /queues/:queueId/resume
+   */
+  public static async resume(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await QueueService.resume(
+        req.user.id,
+        req.params.queueId!,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /queues/:queueId/drain
+   */
+  public static async drain(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await QueueService.drain(req.user.id, req.params.queueId!);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /queues/:queueId/enable
+   */
+  public static async enable(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await QueueService.enable(
+        req.user.id,
+        req.params.queueId!,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /queues/:queueId/disable
+   */
+  public static async disable(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await QueueService.disable(
+        req.user.id,
+        req.params.queueId!,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /queues/:queueId/status
+   */
+  public static async status(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const queue = await QueueQueryService.getQueue(
+        req.user.id,
+        req.params.queueId!,
+      );
+      res.status(200).json({ status: queue.status });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
