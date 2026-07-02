@@ -335,6 +335,101 @@ const swaggerDocument = {
         },
       },
     },
+    '/queues/{queueId}/jobs': {
+      post: {
+        summary: 'Submit Job',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['payload'],
+                properties: {
+                  payload: { type: 'object' },
+                  priority: { type: 'integer', default: 1 },
+                  metadata: { type: 'object' },
+                  idempotencyKey: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Job submitted successfully.' },
+        },
+      },
+      get: {
+        summary: 'List Jobs',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'List of jobs in the queue.' },
+        },
+      },
+    },
+    '/jobs/{jobId}': {
+      get: {
+        summary: 'Get Job',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Job details.' },
+        },
+      },
+    },
+    '/jobs/{jobId}/cancel': {
+      post: {
+        summary: 'Cancel Job',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Job cancelled.' },
+        },
+      },
+    },
+    '/jobs/{jobId}/status': {
+      get: {
+        summary: 'Get Job Status',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Job status response.' },
+        },
+      },
+    },
   },
 };
 

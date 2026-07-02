@@ -1,0 +1,54 @@
+import { Router } from 'express';
+import { JobController } from '../controllers/job.js';
+import {
+  submitJobSchema,
+  listJobsSchema,
+  getJobSchema,
+  cancelJobSchema,
+  getJobStatusSchema,
+} from '../schemas/index.js';
+import { validate } from '../../../middlewares/validator.js';
+import { requireAuth } from '../../auth/middleware/auth.js';
+
+// Root jobs router (e.g. /api/v1/jobs)
+const jobsRouter = Router();
+
+jobsRouter.get(
+  '/:jobId',
+  requireAuth,
+  validate(getJobSchema),
+  JobController.get,
+);
+
+jobsRouter.post(
+  '/:jobId/cancel',
+  requireAuth,
+  validate(cancelJobSchema),
+  JobController.cancel,
+);
+
+jobsRouter.get(
+  '/:jobId/status',
+  requireAuth,
+  validate(getJobStatusSchema),
+  JobController.status,
+);
+
+// Queue jobs sub-router (e.g. /api/v1/queues/:queueId/jobs)
+const queuesJobsRouter = Router({ mergeParams: true });
+
+queuesJobsRouter.post(
+  '/',
+  requireAuth,
+  validate(submitJobSchema),
+  JobController.submit,
+);
+
+queuesJobsRouter.get(
+  '/',
+  requireAuth,
+  validate(listJobsSchema),
+  JobController.list,
+);
+
+export { jobsRouter, queuesJobsRouter };

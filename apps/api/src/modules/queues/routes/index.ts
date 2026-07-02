@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { QueueController } from '../controllers/queue.js';
+import { queuesJobsRouter } from '../../jobs/index.js';
 import {
   createQueueSchema,
   listQueuesSchema,
@@ -89,6 +90,8 @@ queuesRouter.get(
   validate(getQueueStatusSchema),
   QueueController.status,
 );
+
+queuesRouter.use('/:queueId/jobs', queuesJobsRouter);
 
 // Project queues sub-router (e.g. /api/v1/projects/:projectId/queues)
 const projectQueuesRouter = Router({ mergeParams: true });

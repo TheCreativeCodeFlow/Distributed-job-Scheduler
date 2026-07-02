@@ -204,6 +204,8 @@ model Job {
   workerId       String?           @map("worker_id") @db.Uuid
   scheduledAt    DateTime          @default(now()) @map("scheduled_at") @db.Timestamptz
   idempotencyKey String?           @map("idempotency_key")
+  metadata       Json              @default("{}")
+  submittedBy    String?           @map("submitted_by")
   version        Int               @default(1)
   createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz
