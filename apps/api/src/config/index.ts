@@ -12,6 +12,9 @@ const envSchema = z.object({
     : z.string().url(),
   REDIS_URL: z.string().url().default('redis://localhost:6379'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  JWT_SECRET: isTest
+    ? z.string().default('test-secret-key-123')
+    : z.string().min(32, 'JWT_SECRET must be at least 32 characters long.'),
 });
 
 let validatedEnv: z.infer<typeof envSchema>;
@@ -41,5 +44,8 @@ export const config = {
   },
   log: {
     level: validatedEnv.LOG_LEVEL,
+  },
+  jwt: {
+    secret: validatedEnv.JWT_SECRET,
   },
 };
