@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { OrganizationController } from '../controllers/organization.js';
 import { MembershipController } from '../controllers/membership.js';
+import { orgInvitationsRouter } from '../../invitations/index.js';
 import {
   createOrganizationSchema,
   updateOrganizationSchema,
@@ -74,6 +75,8 @@ router.delete(
   validate(removeMemberSchema),
   MembershipController.delete,
 );
+
+router.use('/:organizationId/invitations', orgInvitationsRouter);
 
 export const organizationRouter = router;
 export default organizationRouter;

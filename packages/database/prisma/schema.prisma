@@ -83,7 +83,8 @@ model User {
   updatedAt    DateTime             @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt    DateTime?            @map("deleted_at") @db.Timestamptz
   memberships  OrganizationMember[]
-  apiKeys      ApiKey[]
+  apiKeys         ApiKey[]
+  sentInvitations OrganizationInvitation[]
 
   @@map("users")
 }
@@ -101,6 +102,7 @@ model Organization {
   deletedAt   DateTime?            @map("deleted_at") @db.Timestamptz
   memberships OrganizationMember[]
   projects    Project[]
+  invitations OrganizationInvitation[]
 
   @@map("organizations")
 }
@@ -325,3 +327,32 @@ model SystemSetting {
 
   @@map("system_settings")
 }
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+  EXPIRED
+}
+
+model OrganizationInvitation {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  email          String
+  role           MembershipRole   @default(DEVELOPER)
+  inviterId      String           @map("inviter_id") @db.Uuid
+  token          String           @unique
+  expiresAt      DateTime         @map("expires_at") @db.Timestamptz
+  status         InvitationStatus @default(PENDING)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter        User             @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("organization_invitations")
+}
+
