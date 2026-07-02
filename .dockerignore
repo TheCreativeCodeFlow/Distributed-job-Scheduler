@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Cache and build files
+.turbo/
+dist/
+build/
+.next/
+out/
+tsconfig.tsbuildinfo
+
+# Repository configurations and documentation
+.git/
+.changeset/
+.husky/
+.vscode/
+docs/
+README.md
+LICENSE
+
+# Environments and logs
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS Metadata
+.DS_Store
+Thumbs.db

@@ -1,0 +1,74 @@
+services:
+  # ==========================================================
+  # Infrastructure Services (Databases, Cache, Queue Brokers)
+  # ==========================================================
+
+  # postgres:
+  #   container_name: djs-postgres
+  #   image: postgres:16-alpine
+  #   # Placeholder for future environment options:
+  #   # environment:
+  #   #   POSTGRES_USER: ${DB_USER:-postgres}
+  #   #   POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+  #   #   POSTGRES_DB: ${DB_NAME:-scheduler}
+  #   # ports:
+  #   #   - "5432:5432"
+  #   # volumes:
+  #   #   - pgdata:/var/lib/postgresql/data
+
+  # redis:
+  #   container_name: djs-redis
+  #   image: redis:7-alpine
+  #   # ports:
+  #   #   - "6379:6379"
+  #   # volumes:
+  #   #   - redisdata:/data
+
+  # ==========================================================
+  # Application Services (Monorepo Workspace Services)
+  # ==========================================================
+
+  # api:
+  #   container_name: djs-api
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/api/Dockerfile
+  #   # environment:
+  #   #   - NODE_ENV=development
+  #   #   - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+  #   #   - REDIS_URL=redis://redis:6379/0
+  #   # ports:
+  #   #   - "${API_PORT:-3000}:${API_PORT:-3000}"
+  #   # depends_on:
+  #   #   - postgres
+  #   #   - redis
+
+  # worker:
+  #   container_name: djs-worker
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/worker/Dockerfile
+  #   # environment:
+  #   #   - NODE_ENV=development
+  #   #   - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+  #   #   - REDIS_URL=redis://redis:6379/0
+  #   # depends_on:
+  #   #   - postgres
+  #   #   - redis
+
+  # dashboard:
+  #   container_name: djs-dashboard
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/web/Dockerfile
+  #   # environment:
+  #   #   - NODE_ENV=development
+  #   #   - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+  #   # ports:
+  #   #   - "3002:3000"
+  #   # depends_on:
+  #   #   - api
+
+# volumes:
+#   pgdata:
+#   redisdata:
