@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ProjectController } from '../controllers/project.js';
+import { projectQueuesRouter } from '../../queues/index.js';
 import {
   createProjectSchema,
   listProjectsSchema,
@@ -66,5 +67,7 @@ orgProjectsRouter.get(
   validate(listProjectsSchema),
   ProjectController.list,
 );
+
+projectsRouter.use('/:projectId/queues', projectQueuesRouter);
 
 export { projectsRouter, orgProjectsRouter };

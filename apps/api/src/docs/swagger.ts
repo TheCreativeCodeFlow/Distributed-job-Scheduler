@@ -52,6 +52,289 @@ const swaggerDocument = {
         },
       },
     },
+    '/organizations/{organizationId}/projects': {
+      post: {
+        summary: 'Create Project',
+        parameters: [
+          {
+            name: 'organizationId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'slug'],
+                properties: {
+                  name: { type: 'string' },
+                  slug: { type: 'string' },
+                  description: { type: 'string' },
+                  metadata: { type: 'object' },
+                  settings: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Project created successfully.' },
+        },
+      },
+      get: {
+        summary: 'List Projects',
+        parameters: [
+          {
+            name: 'organizationId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'List of projects.' },
+        },
+      },
+    },
+    '/projects/{projectId}': {
+      get: {
+        summary: 'Get Project',
+        parameters: [
+          {
+            name: 'projectId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Project details.' },
+        },
+      },
+      patch: {
+        summary: 'Update Project',
+        parameters: [
+          {
+            name: 'projectId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  description: { type: 'string' },
+                  metadata: { type: 'object' },
+                  settings: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Project updated.' },
+        },
+      },
+      delete: {
+        summary: 'Archive Project',
+        parameters: [
+          {
+            name: 'projectId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          204: { description: 'Project archived.' },
+        },
+      },
+    },
+    '/projects/{projectId}/restore': {
+      post: {
+        summary: 'Restore Project',
+        parameters: [
+          {
+            name: 'projectId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Project restored.' },
+        },
+      },
+    },
+    '/projects/{projectId}/settings': {
+      patch: {
+        summary: 'Update Project Settings',
+        parameters: [
+          {
+            name: 'projectId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['settings'],
+                properties: {
+                  settings: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Settings updated.' },
+        },
+      },
+    },
+    '/projects/{projectId}/queues': {
+      post: {
+        summary: 'Create Queue',
+        parameters: [
+          {
+            name: 'projectId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'slug', 'retryPolicyId'],
+                properties: {
+                  name: { type: 'string' },
+                  slug: { type: 'string' },
+                  description: { type: 'string' },
+                  priority: { type: 'integer', default: 0 },
+                  maxConcurrency: { type: 'integer', default: 10 },
+                  rateLimit: { type: 'integer' },
+                  retryPolicyId: { type: 'string', format: 'uuid' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Queue created successfully.' },
+        },
+      },
+      get: {
+        summary: 'List Queues',
+        parameters: [
+          {
+            name: 'projectId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'List of queues.' },
+        },
+      },
+    },
+    '/queues/{queueId}': {
+      get: {
+        summary: 'Get Queue',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Queue details.' },
+        },
+      },
+      patch: {
+        summary: 'Update Queue',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  description: { type: 'string' },
+                  priority: { type: 'integer' },
+                  maxConcurrency: { type: 'integer' },
+                  rateLimit: { type: 'integer' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Queue updated.' },
+        },
+      },
+      delete: {
+        summary: 'Archive Queue',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          204: { description: 'Queue archived.' },
+        },
+      },
+    },
+    '/queues/{queueId}/restore': {
+      post: {
+        summary: 'Restore Queue',
+        parameters: [
+          {
+            name: 'queueId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Queue restored.' },
+        },
+      },
+    },
   },
 };
 
