@@ -3,10 +3,10 @@
     "scenarioName": "Job Submission - 10 jobs/sec",
     "throughput": 9.995002498750626,
     "p50": 0,
-    "p95": 0,
-    "p99": 0,
+    "p95": 1,
+    "p99": 1,
     "successRate": 100,
-    "memoryUsageRssMb": 91.25
+    "memoryUsageRssMb": 88.72
   },
   {
     "scenarioName": "Job Submission - 100 jobs/sec",
@@ -15,15 +15,15 @@
     "p95": 0,
     "p99": 0,
     "successRate": 100,
-    "memoryUsageRssMb": 91.27
+    "memoryUsageRssMb": 88.8
   },
   {
     "scenarioName": "Job Submission - 1000 jobs/sec",
-    "throughput": 1000,
+    "throughput": 990.09900990099,
     "p50": 0,
     "p95": 0,
     "p99": 1,
     "successRate": 100,
-    "memoryUsageRssMb": 91.28
+    "memoryUsageRssMb": 89.06
   }
 ]
