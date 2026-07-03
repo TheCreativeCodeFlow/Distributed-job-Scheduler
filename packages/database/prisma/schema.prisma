@@ -16,6 +16,8 @@ enum JobStatus {
   FAILED
   CANCELLED
   DEAD_LETTER
+  RETRY_PENDING
+  RETRY_EXHAUSTED
 }
 
 enum ExecutionStatus {

@@ -22,7 +22,7 @@ export class SchedulerService {
           SELECT sj.id, sj.job_id
           FROM scheduled_jobs sj
           INNER JOIN jobs j ON sj.job_id = j.id
-          WHERE sj.next_run_at <= ${now} AND j.status = 'SCHEDULED'
+          WHERE sj.next_run_at <= ${now} AND (j.status = 'SCHEDULED' OR j.status = 'RETRY_PENDING')
           LIMIT ${batchSize}
           FOR UPDATE SKIP LOCKED
         `;

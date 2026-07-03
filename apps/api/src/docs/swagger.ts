@@ -917,6 +917,46 @@ const swaggerDocument = {
         },
       },
     },
+    '/jobs/{jobId}/retry': {
+      post: {
+        summary: 'Trigger Manual Job Retry',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Manual retry queued successfully.' },
+        },
+      },
+    },
+    '/jobs/{jobId}/retries': {
+      get: {
+        summary: 'Get Job Retry Details',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Current retry status details.' },
+        },
+      },
+    },
+    '/retries/metrics': {
+      get: {
+        summary: 'Get Overall Retry Metrics',
+        responses: {
+          200: { description: 'Retry metrics details.' },
+        },
+      },
+    },
   },
 };
 

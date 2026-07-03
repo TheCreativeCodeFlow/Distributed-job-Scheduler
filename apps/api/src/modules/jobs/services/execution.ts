@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 import { NotFoundError, ValidationError } from '../../../errors/index.js';
 import { logger } from '../../../logger/index.js';
+import { RetryService } from './retry.js';
 
 export class JobExecutionService {
   /**
@@ -218,11 +219,8 @@ export class JobExecutionService {
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - execution.startedAt.getTime();
 
-      // 4. Transition RUNNING -> FAILED
-      await tx.job.update({
-        where: { id: jobId },
-        data: { status: JobStatus.FAILED },
-      });
+      // 4. Evaluate and apply Retry Strategy
+      await RetryService.handleFailure(tx, jobId);
 
       // 5. Update JobExecution
       const updated = await tx.jobExecution.update({

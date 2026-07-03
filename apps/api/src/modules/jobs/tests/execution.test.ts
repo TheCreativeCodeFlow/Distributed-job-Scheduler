@@ -27,6 +27,8 @@ describe('Job Execution Engine', () => {
       count: 1,
     } as any);
 
+    vi.spyOn(db.scheduledJob, 'upsert').mockResolvedValue({} as any);
+
     token = TokenService.generateAccessToken({
       sub: mockUserId,
       email: 'operator@domain.com',
@@ -181,7 +183,14 @@ describe('Job Execution Engine', () => {
         id: mockJobId,
         status: JobStatus.RUNNING,
         workerId: mockWorkerId,
-      } as Job;
+        attempts: 0,
+        queue: {
+          retryPolicy: {
+            maxAttempts: 3,
+            backoffFactor: 2.0,
+          },
+        },
+      } as any;
 
       const mockExecution = {
         id: mockExecutionId,

@@ -18,6 +18,8 @@ import {
   failExecutionSchema,
   getExecutionSchema,
 } from '../schemas/index.js';
+import { manualRetrySchema, getRetryStatusSchema } from '../schemas/retry.js';
+import { RetryController } from '../controllers/retry.js';
 import { validate } from '../../../middlewares/validator.js';
 import { requireAuth } from '../../auth/middleware/auth.js';
 
@@ -80,6 +82,20 @@ jobsRouter.get(
   JobExecutionController.getExecution,
 );
 
+jobsRouter.post(
+  '/:jobId/retry',
+  requireAuth,
+  validate(manualRetrySchema),
+  RetryController.retry,
+);
+
+jobsRouter.get(
+  '/:jobId/retries',
+  requireAuth,
+  validate(getRetryStatusSchema),
+  RetryController.getRetryStatus,
+);
+
 // Queue jobs sub-router (e.g. /api/v1/queues/:queueId/jobs)
 const queuesJobsRouter = Router({ mergeParams: true });
 
@@ -128,4 +144,9 @@ scheduledJobsRouter.post(
   JobController.cancelScheduled,
 );
 
-export { jobsRouter, queuesJobsRouter, scheduledJobsRouter };
+// Root retries router (e.g. /api/v1/retries)
+const retriesRouter = Router();
+
+retriesRouter.get('/metrics', requireAuth, RetryController.getMetrics);
+
+export { jobsRouter, queuesJobsRouter, scheduledJobsRouter, retriesRouter };
