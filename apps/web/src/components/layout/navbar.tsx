@@ -7,11 +7,11 @@ import {
   Menu,
   LogOut,
   User as UserIcon,
-  X,
   Sliders,
 } from 'lucide-react';
 import { Breadcrumbs } from './breadcrumbs';
 import { ThemeToggle } from './theme-toggle';
+import { WorkspaceSelector } from './workspace-selector';
 import { useAuth } from '../../providers/auth-provider';
 import { useSidebarStore } from '../../store/sidebar';
 import { Button } from '../ui/button';
@@ -24,7 +24,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border bg-background/85 px-6 backdrop-blur-md">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {/* Toggle mobile sidebar */}
         <Button
           variant="ghost"
@@ -35,8 +35,11 @@ export function Navbar() {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div className="hidden sm:block">
+        <div className="hidden lg:block">
           <Breadcrumbs />
+        </div>
+        <div className="hidden sm:block">
+          <WorkspaceSelector />
         </div>
       </div>
 

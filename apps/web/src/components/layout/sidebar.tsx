@@ -15,6 +15,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Database,
+  Building2,
+  FolderGit,
+  ListTodo,
+  Terminal,
+  Settings2,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useSidebarStore } from '../../store/sidebar';
@@ -29,83 +35,72 @@ interface SidebarItem {
   allowedRoles?: UserRole[];
 }
 
-const navItems: SidebarItem[] = [
+interface SidebarGroup {
+  groupName: string;
+  items: SidebarItem[];
+}
+
+const navGroups: SidebarGroup[] = [
   {
-    name: 'Overview',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    name: 'Queues',
-    href: '/dashboard/queues',
-    icon: Layers,
-    allowedRoles: [
-      'SYSTEM_ADMIN',
-      'ORG_OWNER',
-      'ORG_ADMIN',
-      'DEVELOPER',
-      'READ_ONLY',
+    groupName: 'Core Console',
+    items: [
+      { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+      {
+        name: 'Organizations',
+        href: '/dashboard/organizations',
+        icon: Building2,
+        allowedRoles: ['SYSTEM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
+      },
+      {
+        name: 'Projects',
+        href: '/dashboard/projects',
+        icon: FolderGit,
+        allowedRoles: ['SYSTEM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
+      },
     ],
   },
   {
-    name: 'Workers',
-    href: '/dashboard/workers',
-    icon: Cpu,
-    allowedRoles: [
-      'SYSTEM_ADMIN',
-      'ORG_OWNER',
-      'ORG_ADMIN',
-      'DEVELOPER',
-      'READ_ONLY',
+    groupName: 'Operations',
+    items: [
+      { name: 'Queues', href: '/dashboard/queues', icon: Layers },
+      { name: 'Workers', href: '/dashboard/workers', icon: Cpu },
+      { name: 'Jobs', href: '/dashboard/jobs', icon: ListTodo },
+      { name: 'Executions', href: '/dashboard/executions', icon: Terminal },
     ],
   },
   {
-    name: 'Scheduled Jobs',
-    href: '/dashboard/scheduled',
-    icon: CalendarDays,
-    allowedRoles: [
-      'SYSTEM_ADMIN',
-      'ORG_OWNER',
-      'ORG_ADMIN',
-      'DEVELOPER',
-      'READ_ONLY',
+    groupName: 'Execution Engine',
+    items: [
+      {
+        name: 'Scheduled Jobs',
+        href: '/dashboard/scheduled',
+        icon: CalendarDays,
+      },
+      { name: 'Retry Engine', href: '/dashboard/retries', icon: RefreshCw },
+      { name: 'Dead Letter Queue', href: '/dashboard/dlq', icon: Skull },
+      {
+        name: 'Scheduler Engine',
+        href: '/dashboard/scheduler',
+        icon: Settings2,
+      },
     ],
   },
   {
-    name: 'Retries log',
-    href: '/dashboard/retries',
-    icon: RefreshCw,
-    allowedRoles: [
-      'SYSTEM_ADMIN',
-      'ORG_OWNER',
-      'ORG_ADMIN',
-      'DEVELOPER',
-      'READ_ONLY',
+    groupName: 'Telemetry & Admin',
+    items: [
+      {
+        name: 'Metrics Telemetry',
+        href: '/dashboard/metrics',
+        icon: BarChart3,
+      },
+      { name: 'Activity Timeline', href: '/dashboard/timeline', icon: History },
+      {
+        name: 'Settings',
+        href: '/dashboard/settings',
+        icon: Settings,
+        allowedRoles: ['SYSTEM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
+      },
     ],
-  },
-  {
-    name: 'Dead Letter Queue',
-    href: '/dashboard/dlq',
-    icon: Skull,
-    allowedRoles: [
-      'SYSTEM_ADMIN',
-      'ORG_OWNER',
-      'ORG_ADMIN',
-      'DEVELOPER',
-      'READ_ONLY',
-    ],
-  },
-  {
-    name: 'Audit Logs',
-    href: '/dashboard/logs',
-    icon: History,
-    allowedRoles: ['SYSTEM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
-  },
-  {
-    name: 'Settings',
-    href: '/dashboard/settings',
-    icon: Settings,
-    allowedRoles: ['SYSTEM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
   },
 ];
 
@@ -122,7 +117,7 @@ export function Sidebar() {
       )}
     >
       {/* Brand logo header */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-border/80">
+      <div className="flex h-16 items-center justify-between px-4 border-b border-b-border/80">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 font-bold tracking-tight"
@@ -148,31 +143,48 @@ export function Sidebar() {
       </div>
 
       {/* Main navigation lists */}
-      <nav className="flex-1 space-y-1.5 p-3 overflow-y-auto">
-        {navItems.map((item) => {
-          if (item.allowedRoles && !hasRole(item.allowedRoles)) {
-            return null;
-          }
+      <nav className="flex-1 space-y-4 p-3 overflow-y-auto">
+        {navGroups.map((group) => {
+          // Filter out items not allowed for role
+          const visibleItems = group.items.filter(
+            (item) => !item.allowedRoles || hasRole(item.allowedRoles),
+          );
 
-          const isActive =
-            pathname === item.href ||
-            (item.href !== '/dashboard' && pathname.startsWith(item.href));
-          const Icon = item.icon;
+          if (visibleItems.length === 0) return null;
 
           return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+            <div key={group.groupName} className="space-y-1">
+              {isOpen && (
+                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest px-3 py-1">
+                  {group.groupName}
+                </p>
               )}
-            >
-              <Icon className="h-4.5 w-4.5 flex-shrink-0" />
-              {isOpen && <span className="truncate">{item.name}</span>}
-            </Link>
+              <div className="space-y-0.5">
+                {visibleItems.map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== '/dashboard' &&
+                      pathname.startsWith(item.href));
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                          : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                      )}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {isOpen && <span className="truncate">{item.name}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </nav>

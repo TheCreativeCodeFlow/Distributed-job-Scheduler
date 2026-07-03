@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { Sidebar } from './sidebar';
 import { Navbar } from './navbar';
+import { CommandPalette } from './command-palette';
 import { useSidebarStore } from '../../store/sidebar';
 import { usePathname } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
@@ -22,10 +23,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, isMobile, setOpen]);
 
-  // Auth pages don't render layout shell
-  const isAuthPage = pathname.startsWith('/login');
+  // Auth/public pages don't render layout shell
+  const isPublicPage = ['/login', '/session-expired', '/unauthorized'].some(
+    (route) => pathname.startsWith(route),
+  );
 
-  if (isAuthPage) {
+  if (isPublicPage) {
     return <main className="flex-1">{children}</main>;
   }
 
@@ -56,6 +59,9 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
           <div className="mx-auto max-w-7xl space-y-6">{children}</div>
         </main>
       </div>
+
+      {/* Global command search palette */}
+      <CommandPalette />
     </div>
   );
 }
