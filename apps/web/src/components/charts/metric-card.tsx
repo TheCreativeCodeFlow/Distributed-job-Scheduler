@@ -9,7 +9,7 @@ interface MetricCardProps {
   value: string | number;
   description?: string;
   trend?: number; // e.g. 12.4 for +12.4%
-  icon?: React.ReactNode;
+  icon?: React.ComponentType<any>;
   sparklineData?: number[];
   className?: string;
 }
@@ -19,7 +19,7 @@ export function MetricCard({
   value,
   description,
   trend,
-  icon,
+  icon: Icon,
   sparklineData,
   className,
 }: MetricCardProps) {
@@ -32,7 +32,11 @@ export function MetricCard({
           <span className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">
             {title}
           </span>
-          {icon && <div className="text-muted-foreground/80">{icon}</div>}
+          {Icon && (
+            <div className="text-muted-foreground/80">
+              <Icon className="h-5 w-5" />
+            </div>
+          )}
         </div>
 
         <div className="mt-3 flex items-baseline gap-2">
