@@ -881,6 +881,42 @@ const swaggerDocument = {
         },
       },
     },
+    '/scheduler/promote': {
+      post: {
+        summary: 'Promote Scheduled Jobs',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  batchSize: { type: 'integer', default: 50 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Jobs promoted successfully.' },
+        },
+      },
+    },
+    '/scheduler/status': {
+      get: {
+        summary: 'Get Scheduler Status',
+        responses: {
+          200: { description: 'Scheduler status details.' },
+        },
+      },
+    },
+    '/scheduler/metrics': {
+      get: {
+        summary: 'Get Scheduler Metrics',
+        responses: {
+          200: { description: 'Scheduler metrics details.' },
+        },
+      },
+    },
   },
 };
 
