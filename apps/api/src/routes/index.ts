@@ -14,6 +14,7 @@ import {
 import { workersRouter } from '../modules/workers/index.js';
 import { schedulerRouter } from '../modules/scheduler/routes/index.js';
 import { metricsRouter } from '../modules/metrics/routes/metrics.js';
+import { dashboardRouter } from '../modules/dashboard/routes/index.js';
 
 const router = Router();
 
@@ -31,5 +32,6 @@ router.use('/scheduler', schedulerRouter);
 router.use('/retries', retriesRouter);
 router.use('/dlq', dlqRouter);
 router.use('/metrics', metricsRouter);
+router.use('/dashboard', dashboardRouter);
 
 export const apiRouter = router;
