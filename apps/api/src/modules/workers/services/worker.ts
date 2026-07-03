@@ -1,6 +1,6 @@
 import { WorkerRepository } from '../repositories/worker.js';
 import { NotFoundError, ValidationError } from '../../../errors/index.js';
-import { WorkerStatus, Worker } from '@prisma/client';
+import { WorkerStatus, Worker, JobStatus } from '@prisma/client';
 import { logger } from '../../../logger/index.js';
 import { db } from '../../../database/index.js';
 
@@ -200,5 +200,167 @@ export class WorkerService {
    */
   public static async list(): Promise<Worker[]> {
     return WorkerRepository.listAll();
+  }
+
+  /**
+   * Performs atomic queue polling and claims next eligible job.
+   */
+  public static async pollAndClaim(
+    _operatorUserId: string,
+    workerId: string,
+    supportedQueuesOverride?: string[],
+  ) {
+    // 1. Verify worker status
+    const worker = await WorkerRepository.findById(workerId);
+    if (!worker) {
+      throw new NotFoundError('Worker not found.');
+    }
+
+    if (worker.status !== WorkerStatus.IDLE) {
+      throw new ValidationError('Worker is not IDLE.');
+    }
+
+    // 2. Validate worker concurrency capacity
+    const activeClaims = await db.job.count({
+      where: {
+        workerId,
+        status: JobStatus.CLAIMED,
+      },
+    });
+
+    if (activeClaims >= worker.maxConcurrency) {
+      logger.warn(
+        { workerId, activeClaims, maxConcurrency: worker.maxConcurrency },
+        'Worker capacity limits exceeded.',
+      );
+      throw new ValidationError('Worker capacity limits exceeded.');
+    }
+
+    // 3. Resolve supported queues list
+    const queuesToPoll = supportedQueuesOverride || worker.supportedQueues;
+    if (!queuesToPoll || queuesToPoll.length === 0) {
+      logger.info({ workerId }, 'No supported queues configured for polling.');
+      return null;
+    }
+
+    // 4. Atomic transaction with SKIP LOCKED
+    return db.$transaction(async (tx) => {
+      const jobs = await tx.$queryRawUnsafe<{ id: string }[]>(
+        `SELECT j.id
+         FROM jobs j
+         INNER JOIN queues q ON j.queue_id = q.id
+         WHERE j.status = 'QUEUED'
+           AND q.status = 'ACTIVE'
+           AND q.is_active = true
+           AND q.is_archived = false
+           AND (q.slug = ANY($1) OR q.name = ANY($1))
+         ORDER BY j.priority DESC, j.created_at ASC
+         LIMIT 1
+         FOR UPDATE SKIP LOCKED`,
+        queuesToPoll,
+      );
+
+      const firstJob = jobs?.[0];
+      if (!firstJob) {
+        logger.info({ workerId }, 'No work available.');
+        return null;
+      }
+
+      const jobId = firstJob.id;
+
+      const updatedJob = await tx.job.update({
+        where: { id: jobId },
+        data: {
+          status: JobStatus.CLAIMED,
+          workerId: workerId,
+        },
+      });
+
+      logger.info({ workerId, jobId }, 'Job claimed.');
+      return updatedJob;
+    });
+  }
+
+  /**
+   * Retrieves all jobs claimed by the worker.
+   */
+  public static async getClaims(_operatorUserId: string, workerId: string) {
+    const worker = await WorkerRepository.findById(workerId);
+    if (!worker) {
+      throw new NotFoundError('Worker not found.');
+    }
+
+    return db.job.findMany({
+      where: {
+        workerId,
+        status: JobStatus.CLAIMED,
+      },
+    });
+  }
+
+  /**
+   * Atomic direct job claim logic.
+   */
+  public static async claimJobDirectly(
+    _operatorUserId: string,
+    jobId: string,
+    workerId: string,
+  ) {
+    // 1. Verify worker status
+    const worker = await WorkerRepository.findById(workerId);
+    if (!worker) {
+      throw new NotFoundError('Worker not found.');
+    }
+
+    if (worker.status !== WorkerStatus.IDLE) {
+      throw new ValidationError('Worker is not IDLE.');
+    }
+
+    // 2. Validate capacity limits
+    const activeClaims = await db.job.count({
+      where: {
+        workerId,
+        status: JobStatus.CLAIMED,
+      },
+    });
+
+    if (activeClaims >= worker.maxConcurrency) {
+      throw new ValidationError('Worker capacity limits exceeded.');
+    }
+
+    // 3. Atomically claim specific job if active and queued
+    return db.$transaction(async (tx) => {
+      const jobs = await tx.$queryRawUnsafe<{ id: string }[]>(
+        `SELECT j.id
+         FROM jobs j
+         INNER JOIN queues q ON j.queue_id = q.id
+         WHERE j.id = $1
+           AND j.status = 'QUEUED'
+           AND q.status = 'ACTIVE'
+           AND q.is_active = true
+           AND q.is_archived = false
+         FOR UPDATE SKIP LOCKED`,
+        jobId,
+      );
+
+      if (!jobs || jobs.length === 0) {
+        logger.warn(
+          { workerId, jobId },
+          'Claim rejected: Job unavailable or locked.',
+        );
+        throw new ValidationError('Job is not available for claiming.');
+      }
+
+      const updatedJob = await tx.job.update({
+        where: { id: jobId },
+        data: {
+          status: JobStatus.CLAIMED,
+          workerId: workerId,
+        },
+      });
+
+      logger.info({ workerId, jobId }, 'Job claimed directly.');
+      return updatedJob;
+    });
   }
 }

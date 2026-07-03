@@ -51,3 +51,29 @@ export const getWorkerStatusSchema = {
     workerId: z.string().uuid('Invalid worker ID format.'),
   }),
 };
+
+export const pollQueueSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+  body: z
+    .object({
+      supportedQueues: z.array(z.string()).optional(),
+    })
+    .optional(),
+};
+
+export const getClaimsSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};
+
+export const claimJobSchema = {
+  params: z.object({
+    jobId: z.string().uuid('Invalid job ID format.'),
+  }),
+  query: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};

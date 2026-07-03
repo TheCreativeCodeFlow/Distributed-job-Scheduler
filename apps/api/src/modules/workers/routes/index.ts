@@ -6,6 +6,8 @@ import {
   updateWorkerSchema,
   deregisterWorkerSchema,
   getWorkerStatusSchema,
+  pollQueueSchema,
+  getClaimsSchema,
 } from '../schemas/index.js';
 import { validate } from '../../../middlewares/validator.js';
 import { requireAuth } from '../../auth/middleware/auth.js';
@@ -47,6 +49,20 @@ workersRouter.get(
   requireAuth,
   validate(getWorkerStatusSchema),
   WorkerController.status,
+);
+
+workersRouter.post(
+  '/:workerId/poll',
+  requireAuth,
+  validate(pollQueueSchema),
+  WorkerController.poll,
+);
+
+workersRouter.get(
+  '/:workerId/claims',
+  requireAuth,
+  validate(getClaimsSchema),
+  WorkerController.getClaims,
 );
 
 export { workersRouter };

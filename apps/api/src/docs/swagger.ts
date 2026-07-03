@@ -430,6 +430,28 @@ const swaggerDocument = {
         },
       },
     },
+    '/jobs/{jobId}/claim': {
+      get: {
+        summary: 'Atomic Direct Job Claim',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+          {
+            name: 'workerId',
+            in: 'query',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Job claimed successfully.' },
+        },
+      },
+    },
     '/queues/{queueId}/jobs/schedule': {
       post: {
         summary: 'Schedule Job',
@@ -623,6 +645,51 @@ const swaggerDocument = {
         ],
         responses: {
           200: { description: 'Worker status response.' },
+        },
+      },
+    },
+    '/workers/{workerId}/poll': {
+      post: {
+        summary: 'Poll Queue and Claim Job',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  supportedQueues: { type: 'array', items: { type: 'string' } },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Job claimed.' },
+          204: { description: 'No eligible jobs found.' },
+        },
+      },
+    },
+    '/workers/{workerId}/claims': {
+      get: {
+        summary: 'Get Worker Claims',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'List of active worker claims.' },
         },
       },
     },

@@ -123,4 +123,82 @@ export class WorkerController {
       next(error);
     }
   }
+
+  /**
+   * POST /workers/:workerId/poll
+   */
+  public static async poll(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await WorkerService.pollAndClaim(
+        req.user.id,
+        req.params.workerId!,
+        req.body?.supportedQueues,
+      );
+      if (!result) {
+        res.status(204).send();
+      } else {
+        res.status(200).json(result);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /workers/:workerId/claims
+   */
+  public static async getClaims(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await WorkerService.getClaims(
+        req.user.id,
+        req.params.workerId!,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /jobs/:jobId/claim
+   */
+  public static async claimJob(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const workerId = req.query.workerId;
+      if (typeof workerId !== 'string') {
+        throw new AuthenticationError(
+          'Worker ID must be provided as a query string.',
+        );
+      }
+      const result = await WorkerService.claimJobDirectly(
+        req.user.id,
+        req.params.jobId!,
+        workerId,
+      );
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

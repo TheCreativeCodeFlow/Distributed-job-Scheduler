@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { JobController } from '../controllers/job.js';
+import { WorkerController } from '../../workers/index.js';
+import { claimJobSchema } from '../../workers/index.js';
 import {
   submitJobSchema,
   listJobsSchema,
@@ -36,6 +38,13 @@ jobsRouter.get(
   requireAuth,
   validate(getJobStatusSchema),
   JobController.status,
+);
+
+jobsRouter.get(
+  '/:jobId/claim',
+  requireAuth,
+  validate(claimJobSchema),
+  WorkerController.claimJob,
 );
 
 // Queue jobs sub-router (e.g. /api/v1/queues/:queueId/jobs)
