@@ -100,3 +100,42 @@ export const cancelScheduledJobSchema = {
     scheduledJobId: z.string().uuid('Invalid scheduled job ID format.'),
   }),
 };
+
+export const startExecutionSchema = {
+  params: z.object({
+    jobId: z.string().uuid('Invalid job ID format.'),
+  }),
+  body: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};
+
+export const completeExecutionSchema = {
+  params: z.object({
+    jobId: z.string().uuid('Invalid job ID format.'),
+  }),
+  body: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+    result: z.record(z.unknown()).optional(),
+    exitCode: z.number().int().optional(),
+    metadata: z.record(z.unknown()).optional(),
+  }),
+};
+
+export const failExecutionSchema = {
+  params: z.object({
+    jobId: z.string().uuid('Invalid job ID format.'),
+  }),
+  body: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+    error: z.record(z.unknown()).optional(),
+    exitCode: z.number().int().optional(),
+    metadata: z.record(z.unknown()).optional(),
+  }),
+};
+
+export const getExecutionSchema = {
+  params: z.object({
+    jobId: z.string().uuid('Invalid job ID format.'),
+  }),
+};

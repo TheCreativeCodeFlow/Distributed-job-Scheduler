@@ -19,6 +19,7 @@ enum JobStatus {
 }
 
 enum ExecutionStatus {
+  RUNNING
   SUCCESS
   ERROR
 }
@@ -246,6 +247,10 @@ model JobExecution {
   startedAt  DateTime        @map("started_at") @db.Timestamptz
   finishedAt DateTime?       @map("finished_at") @db.Timestamptz
   durationMs Int?            @map("duration_ms")
+  exitCode   Int?            @map("exit_code")
+  result     Json?
+  error      Json?
+  metadata   Json            @default("{}")
   job        Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
   worker     Worker          @relation(fields: [workerId], references: [id], onDelete: Restrict)
   logs       JobLog[]

@@ -452,6 +452,118 @@ const swaggerDocument = {
         },
       },
     },
+    '/jobs/{jobId}/start': {
+      post: {
+        summary: 'Start Job Execution',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['workerId'],
+                properties: {
+                  workerId: { type: 'string', format: 'uuid' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Job execution started successfully.' },
+        },
+      },
+    },
+    '/jobs/{jobId}/complete': {
+      post: {
+        summary: 'Complete Job Execution',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['workerId'],
+                properties: {
+                  workerId: { type: 'string', format: 'uuid' },
+                  result: { type: 'object' },
+                  exitCode: { type: 'integer' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Job execution completed.' },
+        },
+      },
+    },
+    '/jobs/{jobId}/fail': {
+      post: {
+        summary: 'Fail Job Execution',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['workerId'],
+                properties: {
+                  workerId: { type: 'string', format: 'uuid' },
+                  error: { type: 'object' },
+                  exitCode: { type: 'integer' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Job execution failed.' },
+        },
+      },
+    },
+    '/jobs/{jobId}/execution': {
+      get: {
+        summary: 'Get Latest Job Execution Details',
+        parameters: [
+          {
+            name: 'jobId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Execution metadata details.' },
+        },
+      },
+    },
     '/queues/{queueId}/jobs/schedule': {
       post: {
         summary: 'Schedule Job',

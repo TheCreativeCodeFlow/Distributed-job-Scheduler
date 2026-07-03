@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { JobController } from '../controllers/job.js';
+import { JobExecutionController } from '../controllers/execution.js';
 import { WorkerController } from '../../workers/index.js';
 import { claimJobSchema } from '../../workers/index.js';
 import {
@@ -12,6 +13,10 @@ import {
   listScheduledJobsSchema,
   getScheduledJobSchema,
   cancelScheduledJobSchema,
+  startExecutionSchema,
+  completeExecutionSchema,
+  failExecutionSchema,
+  getExecutionSchema,
 } from '../schemas/index.js';
 import { validate } from '../../../middlewares/validator.js';
 import { requireAuth } from '../../auth/middleware/auth.js';
@@ -45,6 +50,34 @@ jobsRouter.get(
   requireAuth,
   validate(claimJobSchema),
   WorkerController.claimJob,
+);
+
+jobsRouter.post(
+  '/:jobId/start',
+  requireAuth,
+  validate(startExecutionSchema),
+  JobExecutionController.start,
+);
+
+jobsRouter.post(
+  '/:jobId/complete',
+  requireAuth,
+  validate(completeExecutionSchema),
+  JobExecutionController.complete,
+);
+
+jobsRouter.post(
+  '/:jobId/fail',
+  requireAuth,
+  validate(failExecutionSchema),
+  JobExecutionController.fail,
+);
+
+jobsRouter.get(
+  '/:jobId/execution',
+  requireAuth,
+  validate(getExecutionSchema),
+  JobExecutionController.getExecution,
 );
 
 // Queue jobs sub-router (e.g. /api/v1/queues/:queueId/jobs)
