@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '../store/auth';
 import { UserRole, User } from '../types/auth';
+import axios from 'axios';
 
 interface AuthContextType {
   user: User | null;
@@ -14,31 +15,90 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const PUBLIC_ROUTES = ['/login'];
+const PUBLIC_ROUTES = ['/login', '/session-expired', '/unauthorized'];
+
+// Map of route path prefixes to required roles
+const ROLE_REQUIREMENTS: Record<string, UserRole[]> = {
+  '/dashboard/logs': ['SYSTEM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
+  '/dashboard/settings': ['SYSTEM_ADMIN', 'ORG_OWNER', 'ORG_ADMIN'],
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated, clearSession } = useAuthStore();
+  const { user, isAuthenticated, refreshToken, setSession, clearSession } =
+    useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
 
+  // Silent refresh on mount
   useEffect(() => {
+    const silentRestore = async () => {
+      if (refreshToken && !isAuthenticated) {
+        try {
+          const API_BASE_URL =
+            process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+            refreshToken,
+          });
+          const {
+            accessToken,
+            refreshToken: newRefreshToken,
+            user: newUser,
+          } = response.data;
+          setSession({
+            accessToken,
+            refreshToken: newRefreshToken,
+            user: newUser,
+          });
+        } catch (err) {
+          console.error('Silent session restoration failed:', err);
+          clearSession();
+          router.replace('/session-expired');
+          return;
+        }
+      }
+      setLoading(false);
+    };
+
+    silentRestore();
+  }, [refreshToken, isAuthenticated, setSession, clearSession, router]);
+
+  // Route protection and RBAC guards
+  useEffect(() => {
+    if (loading) return;
+
     const isPublicRoute = PUBLIC_ROUTES.some((route) =>
       pathname.startsWith(route),
     );
 
-    if (!isAuthenticated && !isPublicRoute) {
-      router.replace('/login');
-    } else if (isAuthenticated && isPublicRoute) {
-      router.replace('/dashboard');
+    if (!isAuthenticated) {
+      if (!isPublicRoute) {
+        router.replace('/login');
+      }
     } else {
-      setLoading(false);
+      // User is authenticated
+      if (isPublicRoute && pathname === '/login') {
+        router.replace('/dashboard');
+        return;
+      }
+
+      // Check RBAC limits
+      const matchPath = Object.keys(ROLE_REQUIREMENTS).find((route) =>
+        pathname.startsWith(route),
+      );
+      if (matchPath && user) {
+        const allowedRoles = ROLE_REQUIREMENTS[matchPath];
+        const isAuthorized =
+          user.role === 'SYSTEM_ADMIN' || allowedRoles.includes(user.role);
+        if (!isAuthorized) {
+          router.replace('/unauthorized');
+        }
+      }
     }
-  }, [isAuthenticated, pathname, router]);
+  }, [isAuthenticated, pathname, router, loading, user]);
 
   const hasRole = (allowedRoles: UserRole[]) => {
     if (!user) return false;
-    // SYSTEM_ADMIN bypasses all role scopes
     if (user.role === 'SYSTEM_ADMIN') return true;
     return allowedRoles.includes(user.role);
   };
