@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "node dist/index.js",
+    "dev": "node --env-file=.env dist/index.js",
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

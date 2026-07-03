@@ -60,12 +60,17 @@ export class ProjectRepository {
   public static async listForOrg(
     organizationId: string,
     tx?: Prisma.TransactionClient,
-  ): Promise<Project[]> {
+  ): Promise<Array<Project & { _count: { queues: number } }>> {
     const client = tx || db;
     return client.project.findMany({
       where: {
         organizationId,
         deletedAt: null,
+      },
+      include: {
+        _count: {
+          select: { queues: { where: { deletedAt: null } } },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });

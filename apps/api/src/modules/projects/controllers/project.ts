@@ -106,7 +106,8 @@ export class ProjectController {
       if (!req.user) {
         throw new AuthenticationError('User is not authenticated.');
       }
-      await ProjectService.delete(req.user.id, req.params.projectId!);
+      // DELETE represents a reversible archive operation for projects.
+      await ProjectService.archive(req.user.id, req.params.projectId!);
       res.status(204).end();
     } catch (error) {
       next(error);

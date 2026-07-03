@@ -1,5 +1,10 @@
 export type UserRole =
-  'SYSTEM_ADMIN' | 'ORG_OWNER' | 'ORG_ADMIN' | 'DEVELOPER' | 'READ_ONLY';
+  | 'SYSTEM_ADMIN'
+  | 'ORG_OWNER'
+  | 'ORG_ADMIN'
+  | 'PROJECT_MAINTAINER'
+  | 'DEVELOPER'
+  | 'READ_ONLY';
 
 export interface User {
   id: string;

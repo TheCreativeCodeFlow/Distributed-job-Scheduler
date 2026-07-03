@@ -106,7 +106,8 @@ export class QueueController {
       if (!req.user) {
         throw new AuthenticationError('User is not authenticated.');
       }
-      await QueueService.delete(req.user.id, req.params.queueId!);
+      // DELETE is the public reversible archive operation.
+      await QueueService.archive(req.user.id, req.params.queueId!);
       res.status(204).end();
     } catch (error) {
       next(error);
@@ -251,11 +252,11 @@ export class QueueController {
       if (!req.user) {
         throw new AuthenticationError('User is not authenticated.');
       }
-      const queue = await QueueQueryService.getQueue(
+      const status = await QueueQueryService.getOperationalStatus(
         req.user.id,
         req.params.queueId!,
       );
-      res.status(200).json({ status: queue.status });
+      res.status(200).json(status);
     } catch (error) {
       next(error);
     }
