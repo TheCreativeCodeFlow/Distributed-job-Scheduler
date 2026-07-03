@@ -1019,6 +1019,70 @@ const swaggerDocument = {
         },
       },
     },
+    '/metrics': {
+      get: {
+        summary: 'Get Prometheus compatible metrics telemetry',
+        responses: {
+          200: { description: 'Prometheus metrics.' },
+        },
+      },
+    },
+    '/metrics/queues': {
+      get: {
+        summary: 'Get Queues JSON Metrics',
+        responses: {
+          200: { description: 'Queues metrics.' },
+        },
+      },
+    },
+    '/metrics/workers': {
+      get: {
+        summary: 'Get Workers JSON Metrics',
+        responses: {
+          200: { description: 'Workers metrics.' },
+        },
+      },
+    },
+    '/metrics/jobs': {
+      get: {
+        summary: 'Get Jobs JSON Metrics',
+        responses: {
+          200: { description: 'Jobs metrics.' },
+        },
+      },
+    },
+    '/metrics/retries': {
+      get: {
+        summary: 'Get Retries JSON Metrics',
+        responses: {
+          200: { description: 'Retries metrics.' },
+        },
+      },
+    },
+    '/metrics/dlq': {
+      get: {
+        summary: 'Get DLQ JSON Metrics',
+        responses: {
+          200: { description: 'DLQ metrics.' },
+        },
+      },
+    },
+    '/metrics/scheduler': {
+      get: {
+        summary: 'Get Scheduler JSON Metrics',
+        responses: {
+          200: { description: 'Scheduler metrics.' },
+        },
+      },
+    },
+    '/metrics/system': {
+      get: {
+        summary: 'Get System JSON Metrics',
+        responses: {
+          200: { description: 'System metrics.' },
+        },
+      },
+    },
   },
 };
 

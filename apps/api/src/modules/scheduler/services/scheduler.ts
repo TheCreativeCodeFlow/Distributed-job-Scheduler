@@ -7,6 +7,8 @@ export class SchedulerService {
   private static totalPromotedCount = 0;
   private static lastPromotedCount = 0;
   private static errorCount = 0;
+  private static emptyScansCount = 0;
+  private static lastPromotionLatencyMs = 0;
 
   /**
    * Promotes eligible scheduled jobs to QUEUED status.
@@ -14,6 +16,7 @@ export class SchedulerService {
   public static async promote(batchSize: number = 50): Promise<number> {
     logger.info({ batchSize }, 'Promotion cycle started.');
     const now = new Date();
+    const startTime = Date.now();
 
     try {
       const promoted = await db.$transaction(async (tx) => {
@@ -49,8 +52,10 @@ export class SchedulerService {
       this.lastPromotionCycleAt = new Date();
       this.lastPromotedCount = promoted;
       this.totalPromotedCount += promoted;
+      this.lastPromotionLatencyMs = Date.now() - startTime;
 
       if (promoted === 0) {
+        this.emptyScansCount += 1;
         logger.info('Empty cycle: No eligible scheduled jobs to promote.');
       } else {
         logger.info({ promotedCount: promoted }, 'Jobs promoted successfully.');
@@ -82,6 +87,8 @@ export class SchedulerService {
       totalPromoted: this.totalPromotedCount,
       lastPromotedCount: this.lastPromotedCount,
       errorCount: this.errorCount,
+      emptyScans: this.emptyScansCount,
+      lastPromotionLatencyMs: this.lastPromotionLatencyMs,
     };
   }
 
@@ -93,5 +100,7 @@ export class SchedulerService {
     this.totalPromotedCount = 0;
     this.lastPromotedCount = 0;
     this.errorCount = 0;
+    this.emptyScansCount = 0;
+    this.lastPromotionLatencyMs = 0;
   }
 }

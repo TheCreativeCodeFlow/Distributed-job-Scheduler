@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { WorkerService } from '../services/worker.js';
 import { AuthenticationError } from '../../../errors/index.js';
+import { MetricsService } from '../../metrics/services/metrics.js';
 
 export class WorkerController {
   /**
@@ -219,6 +220,7 @@ export class WorkerController {
         req.params.workerId!,
         req.body,
       );
+      MetricsService.incrementHeartbeatRenewals();
       res.status(200).json({ status: 'ok' });
     } catch (error) {
       next(error);
