@@ -273,6 +273,7 @@ model Worker {
   metadata       Json              @default("{}")
   registeredAt   DateTime          @default(now()) @map("registered_at") @db.Timestamptz
   lastActiveAt   DateTime          @default(now()) @map("last_active_at") @db.Timestamptz
+  lastHeartbeatAt DateTime?        @map("last_heartbeat_at") @db.Timestamptz
   jobs           Job[]
   executions     JobExecution[]
   leases         WorkerLease[]
@@ -282,16 +283,24 @@ model Worker {
   @@map("workers")
 }
 
+enum LeaseStatus {
+  ACTIVE
+  RENEWED
+  RELEASED
+  EXPIRED
+}
+
 model WorkerLease {
   id             String        @id @default(uuid()) @db.Uuid
   jobId          String        @map("job_id") @db.Uuid
   workerId       String        @map("worker_id") @db.Uuid
-  executionId    String        @map("execution_id") @db.Uuid
+  executionId    String?       @map("execution_id") @db.Uuid
+  status         LeaseStatus   @default(ACTIVE)
   expiresAt      DateTime      @map("expires_at") @db.Timestamptz
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
   job            Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
   worker         Worker        @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  execution      JobExecution  @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  execution      JobExecution? @relation(fields: [executionId], references: [id], onDelete: Cascade)
 
   @@unique([jobId], map: "unique_active_lease_per_job")
   @@index([expiresAt], map: "idx_leases_cleanup")

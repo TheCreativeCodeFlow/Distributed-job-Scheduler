@@ -77,3 +77,28 @@ export const claimJobSchema = {
     workerId: z.string().uuid('Invalid worker ID format.'),
   }),
 };
+
+export const heartbeatSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+  body: z
+    .object({
+      cpuUsage: z.number().min(0).max(100).optional(),
+      memoryUsage: z.number().min(0).max(100).optional(),
+      timestamp: z.string().datetime().optional(),
+    })
+    .optional(),
+};
+
+export const getLeaseSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};
+
+export const recoverWorkerSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};

@@ -1,6 +1,6 @@
 import { WorkerRepository } from '../repositories/worker.js';
 import { NotFoundError, ValidationError } from '../../../errors/index.js';
-import { WorkerStatus, Worker, JobStatus } from '@prisma/client';
+import { WorkerStatus, Worker, JobStatus, LeaseStatus } from '@prisma/client';
 import { logger } from '../../../logger/index.js';
 import { db } from '../../../database/index.js';
 
@@ -276,6 +276,15 @@ export class WorkerService {
         },
       });
 
+      await tx.workerLease.create({
+        data: {
+          jobId,
+          workerId,
+          status: LeaseStatus.ACTIVE,
+          expiresAt: new Date(Date.now() + 30000),
+        },
+      });
+
       logger.info({ workerId, jobId }, 'Job claimed.');
       return updatedJob;
     });
@@ -359,8 +368,179 @@ export class WorkerService {
         },
       });
 
+      await tx.workerLease.create({
+        data: {
+          jobId,
+          workerId,
+          status: LeaseStatus.ACTIVE,
+          expiresAt: new Date(Date.now() + 30000),
+        },
+      });
+
       logger.info({ workerId, jobId }, 'Job claimed directly.');
       return updatedJob;
+    });
+  }
+
+  /**
+   * Periodic heartbeat update and lease extensions.
+   */
+  public static async heartbeat(
+    _operatorUserId: string,
+    workerId: string,
+    data?: { cpuUsage?: number; memoryUsage?: number },
+  ) {
+    const worker = await WorkerRepository.findById(workerId);
+    if (!worker) {
+      throw new NotFoundError('Worker not found.');
+    }
+
+    if (worker.status === WorkerStatus.OFFLINE) {
+      throw new ValidationError('Worker is OFFLINE, heartbeat rejected.');
+    }
+
+    // 1. Create heartbeat log
+    await db.workerHeartbeat.create({
+      data: {
+        workerId,
+        cpuUsage: data?.cpuUsage ?? null,
+        memoryUsage: data?.memoryUsage ?? null,
+      },
+    });
+
+    // 2. Resolve target active leases
+    const activeLeases = await db.workerLease.findMany({
+      where: {
+        workerId,
+        status: { in: [LeaseStatus.ACTIVE, LeaseStatus.RENEWED] },
+      },
+    });
+
+    const extendedExpiresAt = new Date(Date.now() + 30000);
+
+    // 3. Atomically extend worker checkins and leases
+    await db.$transaction(async (tx) => {
+      await tx.worker.update({
+        where: { id: workerId },
+        data: {
+          lastHeartbeatAt: new Date(),
+          lastActiveAt: new Date(),
+          status:
+            worker.status === WorkerStatus.LOST
+              ? WorkerStatus.IDLE
+              : worker.status,
+        },
+      });
+
+      for (const lease of activeLeases) {
+        await tx.workerLease.update({
+          where: { id: lease.id },
+          data: {
+            status: LeaseStatus.RENEWED,
+            expiresAt: extendedExpiresAt,
+          },
+        });
+        logger.info({ workerId, leaseId: lease.id }, 'Lease renewed.');
+      }
+    });
+
+    logger.info({ workerId }, 'Heartbeat received.');
+  }
+
+  /**
+   * Retrieves active lease.
+   */
+  public static async getLease(_operatorUserId: string, workerId: string) {
+    const worker = await WorkerRepository.findById(workerId);
+    if (!worker) {
+      throw new NotFoundError('Worker not found.');
+    }
+
+    return db.workerLease.findFirst({
+      where: {
+        workerId,
+        status: { in: [LeaseStatus.ACTIVE, LeaseStatus.RENEWED] },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Recovers a LOST worker.
+   */
+  public static async recover(_operatorUserId: string, workerId: string) {
+    const worker = await WorkerRepository.findById(workerId);
+    if (!worker) {
+      throw new NotFoundError('Worker not found.');
+    }
+
+    if (worker.status !== WorkerStatus.LOST) {
+      throw new ValidationError('Worker is not in LOST status.');
+    }
+
+    await db.$transaction(async (tx) => {
+      // 1. Release active/expired leases
+      await tx.workerLease.updateMany({
+        where: {
+          workerId,
+          status: {
+            in: [LeaseStatus.ACTIVE, LeaseStatus.RENEWED, LeaseStatus.EXPIRED],
+          },
+        },
+        data: {
+          status: LeaseStatus.RELEASED,
+        },
+      });
+
+      // 2. Transition worker state to IDLE (from LOST -> RECOVERING -> IDLE)
+      await tx.worker.update({
+        where: { id: workerId },
+        data: {
+          status: WorkerStatus.IDLE,
+        },
+      });
+    });
+
+    logger.info({ workerId }, 'Worker recovered.');
+  }
+
+  /**
+   * Scans expired leases, marking workers as LOST.
+   */
+  public static async detectExpirations() {
+    const now = new Date();
+    const expiredLeases = await db.workerLease.findMany({
+      where: {
+        status: { in: [LeaseStatus.ACTIVE, LeaseStatus.RENEWED] },
+        expiresAt: { lte: now },
+      },
+    });
+
+    if (expiredLeases.length === 0) {
+      return;
+    }
+
+    await db.$transaction(async (tx) => {
+      for (const lease of expiredLeases) {
+        await tx.workerLease.update({
+          where: { id: lease.id },
+          data: {
+            status: LeaseStatus.EXPIRED,
+          },
+        });
+
+        await tx.worker.update({
+          where: { id: lease.workerId },
+          data: {
+            status: WorkerStatus.LOST,
+          },
+        });
+
+        logger.warn(
+          { leaseId: lease.id, workerId: lease.workerId },
+          'Lease expired. Worker marked LOST.',
+        );
+      }
     });
   }
 }

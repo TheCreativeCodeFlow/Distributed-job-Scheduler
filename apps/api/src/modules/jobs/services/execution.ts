@@ -4,6 +4,7 @@ import {
   ExecutionStatus,
   JobExecution,
   Prisma,
+  LeaseStatus,
 } from '@prisma/client';
 import { NotFoundError, ValidationError } from '../../../errors/index.js';
 import { logger } from '../../../logger/index.js';
@@ -57,6 +58,18 @@ export class JobExecutionService {
           workerId,
           status: ExecutionStatus.RUNNING,
           startedAt: new Date(),
+        },
+      });
+
+      // 5. Associate active lease
+      await tx.workerLease.updateMany({
+        where: {
+          jobId,
+          workerId,
+          status: { in: [LeaseStatus.ACTIVE, LeaseStatus.RENEWED] },
+        },
+        data: {
+          executionId: execution.id,
         },
       });
 
@@ -136,6 +149,18 @@ export class JobExecutionService {
         },
       });
 
+      // 6. Release active lease
+      await tx.workerLease.updateMany({
+        where: {
+          jobId,
+          workerId: data.workerId,
+          status: { in: [LeaseStatus.ACTIVE, LeaseStatus.RENEWED] },
+        },
+        data: {
+          status: LeaseStatus.RELEASED,
+        },
+      });
+
       logger.info(
         { jobId, workerId: data.workerId, durationMs },
         'Job execution completed.',
@@ -209,6 +234,18 @@ export class JobExecutionService {
           exitCode: data.exitCode ?? 1,
           error: (data.error as unknown as Prisma.InputJsonValue) ?? null,
           metadata: (data.metadata as unknown as Prisma.InputJsonValue) ?? {},
+        },
+      });
+
+      // 6. Release active lease
+      await tx.workerLease.updateMany({
+        where: {
+          jobId,
+          workerId: data.workerId,
+          status: { in: [LeaseStatus.ACTIVE, LeaseStatus.RENEWED] },
+        },
+        data: {
+          status: LeaseStatus.RELEASED,
         },
       });
 

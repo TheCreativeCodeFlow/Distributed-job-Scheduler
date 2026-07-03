@@ -23,6 +23,10 @@ describe('Job Execution Engine', () => {
       return callback(db);
     }) as any);
 
+    vi.spyOn(db.workerLease, 'updateMany').mockResolvedValue({
+      count: 1,
+    } as any);
+
     token = TokenService.generateAccessToken({
       sub: mockUserId,
       email: 'operator@domain.com',

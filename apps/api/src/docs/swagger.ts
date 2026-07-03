@@ -805,6 +805,82 @@ const swaggerDocument = {
         },
       },
     },
+    '/workers/{workerId}/heartbeat': {
+      post: {
+        summary: 'Post Worker Heartbeat',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  cpuUsage: { type: 'number' },
+                  memoryUsage: { type: 'number' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Heartbeat logged and leases renewed.' },
+        },
+      },
+      get: {
+        summary: 'Get Worker Last Heartbeat Details',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Heartbeat details returned.' },
+        },
+      },
+    },
+    '/workers/{workerId}/lease': {
+      get: {
+        summary: 'Get Worker Lease Details',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Active lease details.' },
+          204: { description: 'No active lease found.' },
+        },
+      },
+    },
+    '/workers/{workerId}/recover': {
+      post: {
+        summary: 'Recover Worker',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Worker successfully recovered.' },
+        },
+      },
+    },
   },
 };
 

@@ -25,6 +25,8 @@ describe('Worker Polling & Atomic Job Claiming', () => {
       return callback(db);
     }) as any);
 
+    vi.spyOn(db.workerLease, 'create').mockResolvedValue({} as any);
+
     token = TokenService.generateAccessToken({
       sub: mockUserId,
       email: 'operator@domain.com',

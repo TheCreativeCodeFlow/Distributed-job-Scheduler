@@ -201,4 +201,91 @@ export class WorkerController {
       next(error);
     }
   }
+
+  /**
+   * POST /workers/:workerId/heartbeat
+   */
+  public static async heartbeat(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      await WorkerService.heartbeat(
+        req.user.id,
+        req.params.workerId!,
+        req.body,
+      );
+      res.status(200).json({ status: 'ok' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /workers/:workerId/heartbeat
+   */
+  public static async getHeartbeat(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const worker = await WorkerService.get(req.user.id, req.params.workerId!);
+      res.status(200).json({ lastHeartbeatAt: worker.lastHeartbeatAt });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * GET /workers/:workerId/lease
+   */
+  public static async getLease(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      const result = await WorkerService.getLease(
+        req.user.id,
+        req.params.workerId!,
+      );
+      if (!result) {
+        res.status(204).send();
+      } else {
+        res.status(200).json(result);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /workers/:workerId/recover
+   */
+  public static async recover(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User is not authenticated.');
+      }
+      await WorkerService.recover(req.user.id, req.params.workerId!);
+      res.status(200).json({ status: 'recovered' });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
