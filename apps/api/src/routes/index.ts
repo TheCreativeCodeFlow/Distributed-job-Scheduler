@@ -6,6 +6,7 @@ import { invitationsRouter } from '../modules/invitations/index.js';
 import { projectsRouter } from '../modules/projects/index.js';
 import { queuesRouter } from '../modules/queues/index.js';
 import { jobsRouter, scheduledJobsRouter } from '../modules/jobs/index.js';
+import { workersRouter } from '../modules/workers/index.js';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/projects', projectsRouter);
 router.use('/queues', queuesRouter);
 router.use('/jobs', jobsRouter);
 router.use('/scheduled-jobs', scheduledJobsRouter);
+router.use('/workers', workersRouter);
 
 export const apiRouter = router;

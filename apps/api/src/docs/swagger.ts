@@ -513,6 +513,119 @@ const swaggerDocument = {
         },
       },
     },
+    '/workers/register': {
+      post: {
+        summary: 'Register Worker',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['hostname', 'instanceId', 'version'],
+                properties: {
+                  hostname: { type: 'string' },
+                  instanceId: { type: 'string' },
+                  version: { type: 'string' },
+                  supportedQueues: { type: 'array', items: { type: 'string' } },
+                  supportedTags: { type: 'array', items: { type: 'string' } },
+                  maxConcurrency: { type: 'integer', default: 5 },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Worker registered successfully.' },
+        },
+      },
+    },
+    '/workers': {
+      get: {
+        summary: 'List Workers',
+        responses: {
+          200: { description: 'List of registered workers.' },
+        },
+      },
+    },
+    '/workers/{workerId}': {
+      get: {
+        summary: 'Get Worker',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Worker details.' },
+        },
+      },
+      patch: {
+        summary: 'Update Worker Capabilities or Status',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'string' },
+                  supportedQueues: { type: 'array', items: { type: 'string' } },
+                  supportedTags: { type: 'array', items: { type: 'string' } },
+                  maxConcurrency: { type: 'integer' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Worker updated successfully.' },
+        },
+      },
+      delete: {
+        summary: 'Deregister Worker',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Worker deregistered.' },
+        },
+      },
+    },
+    '/workers/{workerId}/status': {
+      get: {
+        summary: 'Get Worker Status',
+        parameters: [
+          {
+            name: 'workerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Worker status response.' },
+        },
+      },
+    },
   },
 };
 

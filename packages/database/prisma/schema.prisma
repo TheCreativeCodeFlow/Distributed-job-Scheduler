@@ -257,17 +257,23 @@ model JobExecution {
 }
 
 model Worker {
-  id           String         @id @default(uuid()) @db.Uuid
-  status       WorkerStatus   @default(IDLE)
-  hostname     String
-  capacity     Int            @default(5)
-  registeredAt DateTime       @default(now()) @map("registered_at") @db.Timestamptz
-  lastActiveAt DateTime       @default(now()) @map("last_active_at") @db.Timestamptz
-  jobs         Job[]
-  executions   JobExecution[]
-  leases       WorkerLease[]
-  heartbeats   WorkerHeartbeat[]
+  id             String            @id @default(uuid()) @db.Uuid
+  status         WorkerStatus      @default(REGISTERING)
+  hostname       String
+  instanceId     String            @map("instance_id")
+  version        String
+  supportedQueues String[]          @map("supported_queues")
+  supportedTags   String[]          @map("supported_tags")
+  maxConcurrency  Int               @default(5) @map("max_concurrency")
+  metadata       Json              @default("{}")
+  registeredAt   DateTime          @default(now()) @map("registered_at") @db.Timestamptz
+  lastActiveAt   DateTime          @default(now()) @map("last_active_at") @db.Timestamptz
+  jobs           Job[]
+  executions     JobExecution[]
+  leases         WorkerLease[]
+  heartbeats     WorkerHeartbeat[]
 
+  @@unique([hostname, instanceId])
   @@map("workers")
 }
 

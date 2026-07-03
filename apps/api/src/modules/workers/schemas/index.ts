@@ -1,0 +1,53 @@
+import { z } from 'zod';
+import { WorkerStatus } from '@prisma/client';
+
+export const registerWorkerSchema = {
+  body: z.object({
+    hostname: z.string().min(1, 'Hostname must not be empty.'),
+    instanceId: z.string().min(1, 'Instance ID must not be empty.'),
+    version: z.string().min(1, 'Version must not be empty.'),
+    supportedQueues: z.array(z.string()).default([]),
+    supportedTags: z.array(z.string()).default([]),
+    maxConcurrency: z
+      .number()
+      .int()
+      .positive('Maximum concurrency must be a positive integer.')
+      .default(5),
+    metadata: z.record(z.unknown()).default({}),
+  }),
+};
+
+export const getWorkerSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};
+
+export const updateWorkerSchema = {
+  body: z.object({
+    status: z.nativeEnum(WorkerStatus).optional(),
+    supportedQueues: z.array(z.string()).optional(),
+    supportedTags: z.array(z.string()).optional(),
+    maxConcurrency: z
+      .number()
+      .int()
+      .positive('Maximum concurrency must be a positive integer.')
+      .optional(),
+    metadata: z.record(z.unknown()).optional(),
+  }),
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};
+
+export const deregisterWorkerSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};
+
+export const getWorkerStatusSchema = {
+  params: z.object({
+    workerId: z.string().uuid('Invalid worker ID format.'),
+  }),
+};
