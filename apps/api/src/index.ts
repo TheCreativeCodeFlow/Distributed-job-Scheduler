@@ -1,5 +1,6 @@
 import { app } from './app.js';
 import { config } from './config/index.js';
+import { validateConfig } from './config/validate.js';
 import { logger } from './logger/index.js';
 import { Database } from './database/index.js';
 import { RedisService } from './redis/index.js';
@@ -11,6 +12,9 @@ let server: Server;
 const bootstrap = async () => {
   try {
     logger.info('🚀 Starting Distributed Job Scheduler API platform...');
+
+    // 0. Validate environment configuration on startup
+    validateConfig();
 
     // 1. Initialize DB Connection
     await Database.connect();

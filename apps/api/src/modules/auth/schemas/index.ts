@@ -5,11 +5,18 @@ export const registerSchema = {
     email: z
       .string()
       .email('Must be a valid email address.')
+      .max(254, 'Email address is too long.')
       .transform((val) => val.toLowerCase().trim()),
-    name: z.string().min(1, 'Name cannot be empty.').optional(),
+    name: z
+      .string()
+      .min(1, 'Name cannot be empty.')
+      .max(100, 'Name is too long.')
+      .optional(),
     password: z
       .string()
       .min(8, 'Password must be at least 8 characters long.')
+      // bcrypt silently truncates at 72 bytes — cap to prevent DoS
+      .max(72, 'Password must not exceed 72 characters.')
       .refine(
         (val) => /[A-Z]/.test(val),
         'Password must contain at least one uppercase letter.',
@@ -30,13 +37,19 @@ export const loginSchema = {
     email: z
       .string()
       .email('Must be a valid email address.')
+      .max(254, 'Email address is too long.')
       .transform((val) => val.toLowerCase().trim()),
-    password: z.string().min(1, 'Password is required.'),
+    // Keep login password validation minimal to avoid lockout on policy changes
+    password: z
+      .string()
+      .min(1, 'Password is required.')
+      .max(72, 'Password is too long.'),
   }),
 };
 
 export const refreshSchema = {
   body: z.object({
-    refreshToken: z.string().min(1, 'Refresh token is required.'),
+    // Optional — refresh token can also come from HttpOnly cookie
+    refreshToken: z.string().min(1, 'Refresh token is required.').optional(),
   }),
 };

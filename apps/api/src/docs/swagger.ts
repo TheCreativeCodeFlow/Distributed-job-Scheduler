@@ -1084,6 +1084,21 @@ const swaggerDocument = {
       },
     },
   },
+  components: {
+    securitySchemes: {
+      BearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Provide your JWT access token to authenticate.',
+      },
+    },
+  },
+  security: [
+    {
+      BearerAuth: [],
+    },
+  ],
 };
 
 export const setupSwagger = (app: Express): void => {

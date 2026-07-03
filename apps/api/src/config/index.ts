@@ -15,6 +15,16 @@ const envSchema = z.object({
   JWT_SECRET: isTest
     ? z.string().default('test-secret-key-123')
     : z.string().min(32, 'JWT_SECRET must be at least 32 characters long.'),
+  // Comma-separated list of allowed CORS origins
+  ALLOWED_ORIGINS: z
+    .string()
+    .default('http://localhost:3000')
+    .transform((val) =>
+      val
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean),
+    ),
 });
 
 let validatedEnv: z.infer<typeof envSchema>;
@@ -48,4 +58,5 @@ export const config = {
   jwt: {
     secret: validatedEnv.JWT_SECRET,
   },
+  corsOrigins: validatedEnv.ALLOWED_ORIGINS,
 };

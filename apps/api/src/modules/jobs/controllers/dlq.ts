@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { DlqService } from '../services/dlq.js';
 import { AuthenticationError } from '../../../errors/index.js';
+import { AuditLogger } from '../../audit/audit-logger.js';
 
 export class DlqController {
   /**
@@ -73,6 +74,16 @@ export class DlqController {
         throw new AuthenticationError('User is not authenticated.');
       }
       const result = await DlqService.replay(req.user.id, req.params.entryId!);
+
+      AuditLogger.log({
+        action: 'dlq.replayed',
+        userId: req.user.id,
+        resourceId: req.params.entryId!,
+        resourceType: 'DeadLetterEntry',
+        ip: req.ip,
+        correlationId: req.correlationId,
+      });
+
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -92,6 +103,16 @@ export class DlqController {
         throw new AuthenticationError('User is not authenticated.');
       }
       const result = await DlqService.purge(req.user.id, req.params.entryId!);
+
+      AuditLogger.log({
+        action: 'dlq.purged',
+        userId: req.user.id,
+        resourceId: req.params.entryId!,
+        resourceType: 'DeadLetterEntry',
+        ip: req.ip,
+        correlationId: req.correlationId,
+      });
+
       res.status(200).json(result);
     } catch (error) {
       next(error);

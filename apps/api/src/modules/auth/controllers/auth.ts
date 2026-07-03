@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticationService } from '../services/auth.js';
+import { TokenService } from '../services/token.js';
+import { AuditLogger } from '../../audit/audit-logger.js';
 import { config } from '../../../config/index.js';
 import { AuthenticationError } from '../../../errors/index.js';
 
@@ -17,6 +19,14 @@ export class AuthController {
   ): Promise<void> {
     try {
       const result = await AuthenticationService.register(req.body);
+
+      AuditLogger.log({
+        action: 'auth.register',
+        userId: result.user.id,
+        ip: req.ip,
+        correlationId: req.correlationId,
+      });
+
       res.status(201).json(result);
     } catch (error) {
       next(error);
@@ -42,6 +52,14 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
+      const decoded = TokenService.verifyToken(tokens.accessToken);
+      AuditLogger.log({
+        action: 'auth.login',
+        userId: decoded.sub,
+        ip: req.ip,
+        correlationId: req.correlationId,
+      });
+
       res.status(200).json({ accessToken: tokens.accessToken });
     } catch (error) {
       next(error);
@@ -57,6 +75,15 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     next: NextFunction,
   ): Promise<void> {
+    if (req.user) {
+      AuditLogger.log({
+        action: 'auth.logout',
+        userId: req.user.id,
+        ip: req.ip,
+        correlationId: req.correlationId,
+      });
+    }
+
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
       secure: isProd,
@@ -97,6 +124,14 @@ export class AuthController {
         secure: isProd,
         sameSite: 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      const decoded = TokenService.verifyToken(tokens.accessToken);
+      AuditLogger.log({
+        action: 'auth.refresh',
+        userId: decoded.sub,
+        ip: req.ip,
+        correlationId: req.correlationId,
       });
 
       res.status(200).json({ accessToken: tokens.accessToken });
