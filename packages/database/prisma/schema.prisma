@@ -321,13 +321,19 @@ model WorkerHeartbeat {
   @@map("worker_heartbeats")
 }
 
+enum DlqStatus {
+  ACTIVE
+  REPLAYED
+}
+
 model DeadLetterEntry {
-  id            String   @id @default(uuid()) @db.Uuid
-  jobId         String   @unique @map("job_id") @db.Uuid
-  failureReason String   @map("failure_reason")
-  errorStack    String?  @map("error_stack")
-  quarantinedAt DateTime @default(now()) @map("quarantined_at") @db.Timestamptz
-  job           Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  id            String    @id @default(uuid()) @db.Uuid
+  jobId         String    @unique @map("job_id") @db.Uuid
+  status        DlqStatus @default(ACTIVE)
+  failureReason String    @map("failure_reason")
+  errorStack    String?   @map("error_stack")
+  quarantinedAt DateTime  @default(now()) @map("quarantined_at") @db.Timestamptz
+  job           Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([quarantinedAt], map: "idx_dlq_quarantine_time")
   @@map("dead_letter_entries")

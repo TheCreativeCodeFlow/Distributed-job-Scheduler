@@ -1,4 +1,5 @@
 export * from './routes/index.js';
+export * from './routes/dlq.js';
 export * from './controllers/job.js';
 export * from './services/job.js';
 export * from './services/query.js';

@@ -1,5 +1,5 @@
 import { db } from '../../../database/index.js';
-import { JobStatus, Prisma } from '@prisma/client';
+import { JobStatus, Prisma, DlqStatus } from '@prisma/client';
 import { NotFoundError, ValidationError } from '../../../errors/index.js';
 import { logger } from '../../../logger/index.js';
 
@@ -75,6 +75,14 @@ export class RetryService {
         data: {
           status: JobStatus.RETRY_EXHAUSTED,
           attempts: nextAttempt,
+        },
+      });
+
+      await tx.deadLetterEntry.create({
+        data: {
+          jobId,
+          status: DlqStatus.ACTIVE,
+          failureReason: 'Retry attempts exhausted.',
         },
       });
 

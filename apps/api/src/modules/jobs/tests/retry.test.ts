@@ -16,7 +16,8 @@ describe('Retry Engine', () => {
     vi.restoreAllMocks();
     RetryService.resetMetrics();
 
-    // Mock db.$transaction
+    vi.spyOn(db.deadLetterEntry, 'create').mockResolvedValue({} as any);
+
     vi.spyOn(db, '$transaction').mockImplementation(((
       callback: (tx: any) => Promise<any>,
     ) => {

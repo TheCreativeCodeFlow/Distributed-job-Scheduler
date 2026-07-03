@@ -957,6 +957,68 @@ const swaggerDocument = {
         },
       },
     },
+    '/dlq': {
+      get: {
+        summary: 'List DLQ Entries',
+        responses: {
+          200: { description: 'Dead letter entries list.' },
+        },
+      },
+    },
+    '/dlq/metrics': {
+      get: {
+        summary: 'Get DLQ Metrics',
+        responses: {
+          200: { description: 'Dead letter metrics details.' },
+        },
+      },
+    },
+    '/dlq/{entryId}': {
+      get: {
+        summary: 'Get DLQ Entry Details',
+        parameters: [
+          {
+            name: 'entryId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Dead letter entry details.' },
+        },
+      },
+      delete: {
+        summary: 'Purge DLQ Entry',
+        parameters: [
+          {
+            name: 'entryId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Dead letter entry purged.' },
+        },
+      },
+    },
+    '/dlq/{entryId}/replay': {
+      post: {
+        summary: 'Replay DLQ Entry',
+        parameters: [
+          {
+            name: 'entryId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Manual replay queued successfully.' },
+        },
+      },
+    },
   },
 };
 

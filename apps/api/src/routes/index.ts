@@ -9,6 +9,7 @@ import {
   jobsRouter,
   scheduledJobsRouter,
   retriesRouter,
+  dlqRouter,
 } from '../modules/jobs/index.js';
 import { workersRouter } from '../modules/workers/index.js';
 import { schedulerRouter } from '../modules/scheduler/routes/index.js';
@@ -27,5 +28,6 @@ router.use('/scheduled-jobs', scheduledJobsRouter);
 router.use('/workers', workersRouter);
 router.use('/scheduler', schedulerRouter);
 router.use('/retries', retriesRouter);
+router.use('/dlq', dlqRouter);
 
 export const apiRouter = router;
