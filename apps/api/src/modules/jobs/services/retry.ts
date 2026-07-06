@@ -2,6 +2,10 @@ import { db } from '../../../database/index.js';
 import { JobStatus, Prisma, DlqStatus } from '@prisma/client';
 import { NotFoundError, ValidationError } from '../../../errors/index.js';
 import { logger } from '../../../logger/index.js';
+import {
+  EventBusService,
+  SSE_EVENT_TYPES,
+} from '../../events/EventBusService.js';
 
 export class RetryService {
   private static totalRetriedCount = 0;
@@ -69,6 +73,11 @@ export class RetryService {
         { jobId, nextAttempt, delayMs: totalDelay },
         'Retry scheduled successfully.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.RETRY_SCHEDULED, {
+        jobId,
+        attempt: nextAttempt,
+        delayMs: totalDelay,
+      });
     } else {
       await tx.job.update({
         where: { id: jobId },
@@ -91,6 +100,14 @@ export class RetryService {
         { jobId, attemptsCount: nextAttempt },
         'Retry attempts exhausted.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.RETRY_EXHAUSTED, {
+        jobId,
+        attempts: nextAttempt,
+      });
+      EventBusService.emitEvent(SSE_EVENT_TYPES.DEAD_LETTER_CREATED, {
+        jobId,
+        reason: 'Retry attempts exhausted.',
+      });
     }
   }
 
@@ -138,6 +155,10 @@ export class RetryService {
         { jobId, attempts: updatedJob.attempts },
         'Manual retry triggered.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.RETRY_PENDING, {
+        jobId,
+        attempts: updatedJob.attempts,
+      });
       return updatedJob;
     });
   }

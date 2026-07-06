@@ -27,6 +27,7 @@ import {
   useWorkerHeartbeat,
   useWorkerPoll,
 } from '../../../../hooks/use-workers';
+import { useNow } from '../../../../lib/live/useNow';
 import { useAuth } from '../../../../providers/auth-provider';
 import { queuePermissions } from '../../../../lib/queue-state';
 import { useToast } from '../../../../components/feedback/toasts';
@@ -68,29 +69,22 @@ export default function WorkerDetailsPage() {
   const heartbeatMutation = useWorkerHeartbeat();
   const pollMutation = useWorkerPoll();
 
-  const [heartbeatAge, setHeartbeatAge] = React.useState('');
+  const now = useNow();
 
-  React.useEffect(() => {
+  const heartbeatAge = React.useMemo(() => {
     if (!workerQuery.data?.lastHeartbeat) {
-      setHeartbeatAge('Never');
-      return;
+      return 'Never';
     }
-    const updateAge = () => {
-      const diff = Math.round(
-        (Date.now() - new Date(workerQuery.data!.lastHeartbeat!).getTime()) /
-          1000,
-      );
-      if (diff < 60) {
-        setHeartbeatAge(`${diff}s ago`);
-      } else {
-        const mins = Math.floor(diff / 60);
-        setHeartbeatAge(`${mins}m ago`);
-      }
-    };
-    updateAge();
-    const interval = setInterval(updateAge, 5000);
-    return () => clearInterval(interval);
-  }, [workerQuery.data?.lastHeartbeat]);
+    const diff = Math.round(
+      (now.getTime() - new Date(workerQuery.data.lastHeartbeat).getTime()) /
+        1000,
+    );
+    if (diff < 60) {
+      return `${diff}s ago`;
+    }
+    const mins = Math.floor(diff / 60);
+    return `${mins}m ago`;
+  }, [workerQuery.data?.lastHeartbeat, now]);
 
   if (workerQuery.isLoading) {
     return (

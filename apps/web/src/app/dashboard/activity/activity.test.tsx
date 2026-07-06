@@ -5,6 +5,8 @@ import ActivityTimelinePage from './page';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as useActivityHook from '../../../hooks/use-activity';
 
+import { LiveProvider } from '../../../lib/live/LiveProvider';
+
 // Mock apiClient
 vi.mock('../../../services/api-client', () => ({
   apiClient: {
@@ -50,7 +52,9 @@ describe('Activity Timeline & Event Center Module', () => {
     const queryClient = createTestQueryClient();
     const { container } = render(
       <QueryClientProvider client={queryClient}>
-        <ActivityTimelinePage />
+        <LiveProvider>
+          <ActivityTimelinePage />
+        </LiveProvider>
       </QueryClientProvider>,
     );
 

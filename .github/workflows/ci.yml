@@ -1,0 +1,76 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Lint, Typecheck, and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.15.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Workspace
+        run: pnpm run lint
+
+      - name: Run Typecheck
+        run: pnpm run typecheck
+
+      - name: Run Workspace Tests
+        run: pnpm run test
+
+      - name: Build Packages & Apps
+        run: pnpm run build
+
+  docker-verify:
+    name: Verify Docker Builds
+    runs-on: ubuntu-latest
+    needs: verify
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build API Docker Image
+        run: docker build -t repo/api:latest -f apps/api/Dockerfile .
+
+      - name: Build Worker Docker Image
+        run: docker build -t repo/worker:latest -f apps/worker/Dockerfile .
+
+      - name: Build Web Dashboard Docker Image
+        run: docker build -t repo/web:latest -f apps/web/Dockerfile .
+
+  security-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.15.0
+
+      - name: Run Security Audit
+        run: pnpm audit --prod

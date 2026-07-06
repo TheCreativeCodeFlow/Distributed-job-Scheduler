@@ -15,6 +15,7 @@ import { WorkspaceSelector } from './workspace-selector';
 import { useAuth } from '../../providers/auth-provider';
 import { useSidebarStore } from '../../store/sidebar';
 import { Button } from '../ui/button';
+import { ConnectionIndicator } from './connection-indicator';
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -56,6 +57,8 @@ export function Navbar() {
         </div>
 
         <ThemeToggle />
+
+        <ConnectionIndicator />
 
         {/* Notifications Icon & Panel Placeholder */}
         <div className="relative">

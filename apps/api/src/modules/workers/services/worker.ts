@@ -3,6 +3,10 @@ import { NotFoundError, ValidationError } from '../../../errors/index.js';
 import { WorkerStatus, Worker, JobStatus, LeaseStatus } from '@prisma/client';
 import { logger } from '../../../logger/index.js';
 import { db } from '../../../database/index.js';
+import {
+  EventBusService,
+  SSE_EVENT_TYPES,
+} from '../../events/EventBusService.js';
 
 export class WorkerService {
   /**
@@ -78,6 +82,11 @@ export class WorkerService {
         },
         'Worker registered successfully.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.WORKER_REGISTERED, {
+        workerId: worker.id,
+        hostname: data.hostname,
+        instanceId: data.instanceId,
+      });
       return worker;
     });
   }
@@ -177,6 +186,7 @@ export class WorkerService {
       );
 
       logger.warn({ workerId }, 'Worker deregistered.');
+      EventBusService.emitEvent(SSE_EVENT_TYPES.WORKER_OFFLINE, { workerId });
       return updated;
     });
   }
@@ -286,6 +296,10 @@ export class WorkerService {
       });
 
       logger.info({ workerId, jobId }, 'Job claimed.');
+      EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_CLAIMED, {
+        workerId,
+        jobId,
+      });
       return updatedJob;
     });
   }
@@ -378,6 +392,10 @@ export class WorkerService {
       });
 
       logger.info({ workerId, jobId }, 'Job claimed directly.');
+      EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_CLAIMED, {
+        workerId,
+        jobId,
+      });
       return updatedJob;
     });
   }
@@ -445,6 +463,11 @@ export class WorkerService {
     });
 
     logger.info({ workerId }, 'Heartbeat received.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.WORKER_HEARTBEAT, {
+      workerId,
+      cpuUsage: data?.cpuUsage,
+      memoryUsage: data?.memoryUsage,
+    });
   }
 
   /**
@@ -502,6 +525,7 @@ export class WorkerService {
     });
 
     logger.info({ workerId }, 'Worker recovered.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.WORKER_RECOVERED, { workerId });
   }
 
   /**
@@ -540,6 +564,10 @@ export class WorkerService {
           { leaseId: lease.id, workerId: lease.workerId },
           'Lease expired. Worker marked LOST.',
         );
+        EventBusService.emitEvent(SSE_EVENT_TYPES.WORKER_LOST, {
+          workerId: lease.workerId,
+          leaseId: lease.id,
+        });
       }
     });
   }

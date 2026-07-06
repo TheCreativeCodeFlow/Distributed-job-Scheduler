@@ -7,6 +7,8 @@ import { AuthProvider } from '../providers/auth-provider';
 import { LayoutShell } from '../components/layout/layout-shell';
 import { ToastContainer } from '../components/feedback/toasts';
 import { ErrorBoundary } from '../components/layout/error-boundary';
+import { LiveProvider } from '../lib/live/LiveProvider';
+import { PreferencesProvider } from '../providers/preferences-provider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -38,10 +40,14 @@ export default function RootLayout({
         <ErrorBoundary>
           <QueryProvider>
             <ThemeProvider>
-              <AuthProvider>
-                <LayoutShell>{children}</LayoutShell>
-                <ToastContainer />
-              </AuthProvider>
+              <PreferencesProvider>
+                <AuthProvider>
+                  <LiveProvider>
+                    <LayoutShell>{children}</LayoutShell>
+                    <ToastContainer />
+                  </LiveProvider>
+                </AuthProvider>
+              </PreferencesProvider>
             </ThemeProvider>
           </QueryProvider>
         </ErrorBoundary>

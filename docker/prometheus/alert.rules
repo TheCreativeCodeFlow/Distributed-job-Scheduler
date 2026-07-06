@@ -1,0 +1,49 @@
+groups:
+  - name: distributed-job-scheduler-alerts
+    rules:
+      # ─── Infrastructure Alerts ──────────────────────────────────────────────
+      - alert: HighJobFailureRate
+        expr: rate(job_failures_total[5m]) / rate(job_completions_total[5m]) * 100 > 15
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Job failure rate is high (exceeds 15% in the last 5 minutes)"
+          description: "High failures detected. Check backend application logs for stack traces."
+
+      - alert: ActiveWorkersPoolDepleted
+        expr: active_workers_count == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No active workers connected"
+          description: "All worker daemon instances have lost heartbeats or exited. Job execution is suspended."
+
+      - alert: QueueBacklogSpike
+        expr: queue_backlog_jobs_count > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue backlog exceeds 10,000 jobs"
+          description: "Backlog has been high for more than 5 minutes. Consider scaling worker capacity."
+
+      # ─── Scheduler Alerts ───────────────────────────────────────────────────
+      - alert: SchedulerPromotionLatencyHigh
+        expr: scheduler_promotion_duration_seconds > 5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scheduler promotion cycle latency is high (> 5s)"
+          description: "Promotion cycle latency spiked. Verify database indexes and pg_lock statuses."
+
+      - alert: SchedulerFailuresSpike
+        expr: increase(scheduler_failures_total[5m]) > 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Scheduler promotion loops are failing"
+          description: "Multiple failed promotion cycles detected. The database connection might be unstable."

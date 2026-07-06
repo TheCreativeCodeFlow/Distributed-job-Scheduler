@@ -28,10 +28,15 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
+import { useLiveUpdates } from '../../lib/live/useLiveUpdates';
+import { globalRefreshManager } from '../../lib/live/RefreshManager';
+
 export default function DashboardPage() {
-  const { preferences } = usePreferencesStore();
   const { filters } = useFiltersStore();
-  const refetchInterval = preferences.refreshIntervalMs || 5000;
+
+  const { refetchInterval, triggerRefresh } = useLiveUpdates({
+    moduleKey: 'overview',
+  });
 
   // Query: Overview
   const {
@@ -108,12 +113,26 @@ export default function DashboardPage() {
     refetchInterval,
   });
 
+  // Subscribe to manual and broadcast refresh events
+  React.useEffect(() => {
+    const unsub = globalRefreshManager.subscribeToRefresh('overview', () => {
+      refetchOverview();
+      refetchHealth();
+      refetchActivity();
+      refetchQueuesMetrics();
+      refetchWorkersMetrics();
+    });
+    return unsub;
+  }, [
+    refetchOverview,
+    refetchHealth,
+    refetchActivity,
+    refetchQueuesMetrics,
+    refetchWorkersMetrics,
+  ]);
+
   const handleManualRefresh = () => {
-    refetchOverview();
-    refetchHealth();
-    refetchActivity();
-    refetchQueuesMetrics();
-    refetchWorkersMetrics();
+    triggerRefresh('overview');
   };
 
   const hasError =

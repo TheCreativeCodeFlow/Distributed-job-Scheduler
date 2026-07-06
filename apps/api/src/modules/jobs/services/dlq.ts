@@ -6,6 +6,10 @@ import {
   AuthorizationError,
 } from '../../../errors/index.js';
 import { logger } from '../../../logger/index.js';
+import {
+  EventBusService,
+  SSE_EVENT_TYPES,
+} from '../../events/EventBusService.js';
 
 export class DlqService {
   /**
@@ -140,6 +144,10 @@ export class DlqService {
         { entryId, newJobId: result.id },
         'Replay completed successfully.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.DEAD_LETTER_REPLAYED, {
+        entryId,
+        newJobId: result.id,
+      });
       return result;
     } catch (error) {
       logger.error({ entryId, error }, 'Replay failed.');

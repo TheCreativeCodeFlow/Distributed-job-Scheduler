@@ -130,7 +130,11 @@ export class QueueQueryService {
       }),
       db.worker.count({
         where: {
-          supportedQueues: { hasSome: [queue.id, queue.slug, queue.name] },
+          supportedQueues: {
+            hasSome: [queue.id, queue.slug, queue.name].filter(
+              (v): v is string => !!v,
+            ),
+          },
           status: { notIn: [WorkerStatus.OFFLINE, WorkerStatus.LOST] },
         },
       }),

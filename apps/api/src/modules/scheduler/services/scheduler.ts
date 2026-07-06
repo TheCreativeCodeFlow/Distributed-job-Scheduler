@@ -1,6 +1,10 @@
 import { db } from '../../../database/index.js';
 import { JobStatus } from '@prisma/client';
 import { logger } from '../../../logger/index.js';
+import {
+  EventBusService,
+  SSE_EVENT_TYPES,
+} from '../../events/EventBusService.js';
 
 export class SchedulerService {
   private static lastPromotionCycleAt: Date | null = null;
@@ -15,6 +19,9 @@ export class SchedulerService {
    */
   public static async promote(batchSize: number = 50): Promise<number> {
     logger.info({ batchSize }, 'Promotion cycle started.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.SCHEDULER_PROMOTION_STARTED, {
+      batchSize,
+    });
     const now = new Date();
     const startTime = Date.now();
 
@@ -59,12 +66,22 @@ export class SchedulerService {
         logger.info('Empty cycle: No eligible scheduled jobs to promote.');
       } else {
         logger.info({ promotedCount: promoted }, 'Jobs promoted successfully.');
+        EventBusService.emitEvent(
+          SSE_EVENT_TYPES.SCHEDULER_PROMOTION_COMPLETED,
+          {
+            promotedCount: promoted,
+            latencyMs: Date.now() - startTime,
+          },
+        );
       }
 
       return promoted;
     } catch (error) {
       this.errorCount += 1;
       logger.error({ error }, 'Promotion failure.');
+      EventBusService.emitEvent(SSE_EVENT_TYPES.SCHEDULER_PROMOTION_FAILED, {
+        error: String(error),
+      });
       throw error;
     }
   }

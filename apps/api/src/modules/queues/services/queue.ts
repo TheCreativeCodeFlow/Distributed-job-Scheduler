@@ -9,6 +9,10 @@ import {
 } from '../../../errors/index.js';
 import { MembershipRole, Queue, QueueStatus } from '@prisma/client';
 import { logger } from '../../../logger/index.js';
+import {
+  EventBusService,
+  SSE_EVENT_TYPES,
+} from '../../events/EventBusService.js';
 
 export class QueueService {
   /**
@@ -400,6 +404,7 @@ export class QueueService {
       QueueStatus.PAUSED,
     );
     logger.info({ queueId, operatorUserId }, 'Queue paused.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.QUEUE_PAUSED, { queueId });
     return updated;
   }
 
@@ -413,6 +418,7 @@ export class QueueService {
       QueueStatus.ACTIVE,
     );
     logger.info({ queueId, operatorUserId }, 'Queue resumed.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.QUEUE_RESUMED, { queueId });
     return updated;
   }
 
@@ -426,6 +432,7 @@ export class QueueService {
       QueueStatus.DRAINING,
     );
     logger.info({ queueId, operatorUserId }, 'Queue drained.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.QUEUE_DRAINING, { queueId });
     return updated;
   }
 
@@ -439,6 +446,7 @@ export class QueueService {
       QueueStatus.DISABLED,
     );
     logger.warn({ queueId, operatorUserId }, 'Queue disabled.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.QUEUE_DISABLED, { queueId });
     return updated;
   }
 
@@ -452,6 +460,7 @@ export class QueueService {
       QueueStatus.ACTIVE,
     );
     logger.info({ queueId, operatorUserId }, 'Queue enabled.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.QUEUE_ENABLED, { queueId });
     return updated;
   }
 }

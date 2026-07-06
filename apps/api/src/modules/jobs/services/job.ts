@@ -10,6 +10,10 @@ import {
 } from '../../../errors/index.js';
 import { MembershipRole, Job, JobStatus, QueueStatus } from '@prisma/client';
 import { logger } from '../../../logger/index.js';
+import {
+  EventBusService,
+  SSE_EVENT_TYPES,
+} from '../../events/EventBusService.js';
 
 export class JobService {
   /**
@@ -97,6 +101,11 @@ export class JobService {
       { queueId, jobId: job.id, operatorUserId },
       'Job submitted successfully.',
     );
+    EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_CREATED, {
+      jobId: job.id,
+      queueId,
+      status: job.status,
+    });
     return job;
   }
 
@@ -150,6 +159,10 @@ export class JobService {
       JobStatus.CANCELLED,
     );
     logger.warn({ jobId, operatorUserId }, 'Job cancelled.');
+    EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_CANCELLED, {
+      jobId,
+      status: JobStatus.CANCELLED,
+    });
     return updated;
   }
 
@@ -270,6 +283,11 @@ export class JobService {
       },
       'Scheduled job created successfully.',
     );
+    EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_SCHEDULED, {
+      jobId: scheduledJob.jobId,
+      scheduledJobId: scheduledJob.id,
+      queueId,
+    });
     return scheduledJob;
   }
 
@@ -326,6 +344,11 @@ export class JobService {
       { jobId: scheduled.jobId, scheduledJobId, operatorUserId },
       'Scheduled job cancelled.',
     );
+    EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_CANCELLED, {
+      jobId: scheduled.jobId,
+      scheduledJobId,
+      status: JobStatus.CANCELLED,
+    });
     return {
       ...scheduled,
       job: updatedJob,

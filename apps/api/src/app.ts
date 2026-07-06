@@ -25,7 +25,7 @@ app.use(
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"], // Swagger UI requires inline styles
         imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'"], // SSE stream from same origin
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         frameAncestors: ["'none'"],
@@ -73,8 +73,16 @@ app.use(
   }),
 );
 
-// ─── Compression ──────────────────────────────────────────────────────────────
-app.use(compression());
+// ─── Compression (disabled for SSE streaming routes) ───────────────────────
+app.use(
+  compression({
+    filter: (req, _res) => {
+      // Do not compress SSE streams — compression breaks chunked streaming
+      if (req.path.startsWith('/api/v1/events')) return false;
+      return compression.filter(req, _res);
+    },
+  }),
+);
 
 // ─── Body Parsing with size limits ───────────────────────────────────────────
 app.use(express.json({ limit: '100kb' }));

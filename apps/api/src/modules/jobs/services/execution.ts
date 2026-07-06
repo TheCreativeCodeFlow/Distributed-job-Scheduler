@@ -8,6 +8,10 @@ import {
 } from '@prisma/client';
 import { NotFoundError, ValidationError } from '../../../errors/index.js';
 import { logger } from '../../../logger/index.js';
+import {
+  EventBusService,
+  SSE_EVENT_TYPES,
+} from '../../events/EventBusService.js';
 import { RetryService } from './retry.js';
 
 export class JobExecutionService {
@@ -78,6 +82,11 @@ export class JobExecutionService {
         { jobId, workerId, executionId: execution.id },
         'Job execution started.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_STARTED, {
+        jobId,
+        workerId,
+        executionId: execution.id,
+      });
       return execution;
     });
   }
@@ -166,6 +175,11 @@ export class JobExecutionService {
         { jobId, workerId: data.workerId, durationMs },
         'Job execution completed.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_COMPLETED, {
+        jobId,
+        workerId: data.workerId,
+        durationMs,
+      });
       return updated;
     });
   }
@@ -251,6 +265,11 @@ export class JobExecutionService {
         { jobId, workerId: data.workerId, durationMs },
         'Job execution failed.',
       );
+      EventBusService.emitEvent(SSE_EVENT_TYPES.JOB_FAILED, {
+        jobId,
+        workerId: data.workerId,
+        durationMs,
+      });
       return updated;
     });
   }

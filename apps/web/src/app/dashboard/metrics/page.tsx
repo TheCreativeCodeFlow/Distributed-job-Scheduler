@@ -20,6 +20,9 @@ import {
   useSystemMetrics,
   useDashboardHealth,
 } from '../../../hooks/use-metrics';
+import { useLiveUpdates } from '../../../lib/live/useLiveUpdates';
+import { globalRefreshManager } from '../../../lib/live/RefreshManager';
+import { LiveContext } from '../../../lib/live/LiveContext';
 import { DashboardContainer } from '../../../components/layout/dashboard-container';
 import { PageHeader } from '../../../components/layout/page-header';
 import { SectionCard } from '../../../components/ui/section-card';
@@ -34,33 +37,25 @@ const formatDuration = (ms?: number | null) => {
 };
 
 export default function MetricsCenterPage() {
-  const [refreshInterval, setRefreshInterval] = React.useState<number | false>(
-    10000,
-  ); // 10s default
   const [lastUpdated, setLastUpdated] = React.useState<Date>(new Date());
-  const [isTabVisible, setIsTabVisible] = React.useState(true);
 
-  // tab visibility checks
-  React.useEffect(() => {
-    const handleVisibilityChange = () => {
-      setIsTabVisible(document.visibilityState === 'visible');
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+  const { refetchInterval, isVisible, pollingInterval, triggerRefresh } =
+    useLiveUpdates({
+      moduleKey: 'metrics',
+    });
 
-  const activeInterval = isTabVisible ? refreshInterval : false;
+  const { setPollingInterval } = React.useContext(LiveContext) || {
+    setPollingInterval: () => {},
+  };
 
-  const queuesQuery = useQueuesMetrics(activeInterval);
-  const workersQuery = useWorkersMetrics(activeInterval);
-  const jobsQuery = useJobsMetrics(activeInterval);
-  const retriesQuery = useRetriesMetrics(activeInterval);
-  const dlqQuery = useDlqMetrics(activeInterval);
-  const schedulerQuery = useSchedulerMetrics(activeInterval);
-  const systemQuery = useSystemMetrics(activeInterval);
-  const healthQuery = useDashboardHealth(activeInterval);
+  const queuesQuery = useQueuesMetrics(refetchInterval);
+  const workersQuery = useWorkersMetrics(refetchInterval);
+  const jobsQuery = useJobsMetrics(refetchInterval);
+  const retriesQuery = useRetriesMetrics(refetchInterval);
+  const dlqQuery = useDlqMetrics(refetchInterval);
+  const schedulerQuery = useSchedulerMetrics(refetchInterval);
+  const systemQuery = useSystemMetrics(refetchInterval);
+  const healthQuery = useDashboardHealth(refetchInterval);
 
   React.useEffect(() => {
     if (
@@ -72,16 +67,32 @@ export default function MetricsCenterPage() {
     }
   }, [queuesQuery.isFetching, workersQuery.isFetching, jobsQuery.isFetching]);
 
+  // Subscribe to manual and broadcast refresh events
+  React.useEffect(() => {
+    const unsub = globalRefreshManager.subscribeToRefresh('metrics', () => {
+      queuesQuery.refetch();
+      workersQuery.refetch();
+      jobsQuery.refetch();
+      retriesQuery.refetch();
+      dlqQuery.refetch();
+      schedulerQuery.refetch();
+      systemQuery.refetch();
+      healthQuery.refetch();
+    });
+    return unsub;
+  }, [
+    queuesQuery,
+    workersQuery,
+    jobsQuery,
+    retriesQuery,
+    dlqQuery,
+    schedulerQuery,
+    systemQuery,
+    healthQuery,
+  ]);
+
   const handleManualRefresh = () => {
-    queuesQuery.refetch();
-    workersQuery.refetch();
-    jobsQuery.refetch();
-    retriesQuery.refetch();
-    dlqQuery.refetch();
-    schedulerQuery.refetch();
-    systemQuery.refetch();
-    healthQuery.refetch();
-    setLastUpdated(new Date());
+    triggerRefresh('metrics');
   };
 
   const handleExportJSON = () => {
@@ -210,7 +221,7 @@ export default function MetricsCenterPage() {
         description="Real-time telemetry, capacity utilization, queue depth, and storage engines latency charts."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            {!isTabVisible && (
+            {!isVisible && (
               <span className="flex items-center gap-1 text-xs text-amber-500 font-medium">
                 <EyeOff className="h-3.5 w-3.5" />
                 Auto-refresh paused (Tab hidden)
@@ -223,14 +234,20 @@ export default function MetricsCenterPage() {
               <Select
                 aria-label="Refresh Interval"
                 value={
-                  refreshInterval === false ? 'off' : String(refreshInterval)
+                  pollingInterval === 'off' || pollingInterval === 'manual'
+                    ? String(pollingInterval)
+                    : String(pollingInterval)
                 }
                 onChange={(e) => {
                   const val = e.target.value;
-                  setRefreshInterval(val === 'off' ? false : Number(val));
+                  setPollingInterval(
+                    val === 'off' || val === 'manual'
+                      ? val
+                      : (Number(val) as any),
+                  );
                 }}
                 options={[
-                  { value: 'off', label: 'Manual only' },
+                  { value: 'manual', label: 'Manual only' },
                   { value: '5000', label: 'Every 5s' },
                   { value: '10000', label: 'Every 10s' },
                   { value: '30000', label: 'Every 30s' },

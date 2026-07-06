@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { Sidebar } from './sidebar';
 import { Navbar } from './navbar';
 import { CommandPalette } from './command-palette';
+import { OfflineBanner } from './offline-banner';
 import { useSidebarStore } from '../../store/sidebar';
 import { usePathname } from 'next/navigation';
 import { useMediaQuery } from '../../hooks/use-media-query';
@@ -55,6 +56,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       {/* Content layout wrapper */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
+        <OfflineBanner />
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="mx-auto max-w-7xl space-y-6">{children}</div>
         </main>

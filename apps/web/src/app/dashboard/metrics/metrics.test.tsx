@@ -4,6 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import MetricsCenterPage from './page';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as useMetricsHook from '../../../hooks/use-metrics';
+import { LiveProvider } from '../../../lib/live/LiveProvider';
 
 // Mock apiClient
 vi.mock('../../../services/api-client', () => ({
@@ -70,7 +71,9 @@ describe('Metrics & Observability Center Module', () => {
     const queryClient = createTestQueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <MetricsCenterPage />
+        <LiveProvider>
+          <MetricsCenterPage />
+        </LiveProvider>
       </QueryClientProvider>,
     );
 
@@ -111,7 +114,9 @@ describe('Metrics & Observability Center Module', () => {
     const queryClient = createTestQueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <MetricsCenterPage />
+        <LiveProvider>
+          <MetricsCenterPage />
+        </LiveProvider>
       </QueryClientProvider>,
     );
 
