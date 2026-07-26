@@ -18,6 +18,7 @@ import {
 } from '../../components/ui/card';
 import { Database, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
+import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -172,6 +173,16 @@ export default function LoginPage() {
             <Button type="submit" className="w-full mt-2" loading={loading}>
               Sign In
             </Button>
+
+            <div className="text-center text-xs font-semibold text-muted-foreground mt-4 select-none">
+              Don't have an enterprise account?{' '}
+              <Link
+                href="/register"
+                className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+              >
+                Sign Up
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>
